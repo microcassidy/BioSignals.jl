@@ -1,1 +1,4 @@
 /Manifest*.toml
+.nvim.lua
+notes.md
+wfdb-spec-main/**
