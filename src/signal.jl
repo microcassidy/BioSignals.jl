@@ -1,61 +1,59 @@
 export read_signal
+using MAT
+include("utils.jl")
 include("../test/utils.jl")
+
+function get_extension_symbol(fname)
+    extension = get_extension(fname) |> lowercase
+    if extension === nothing
+        error("extension is 'nothing'")
+    elseif extension == ".mat"
+        return :matlab
+    elseif extension == ".dat"
+        return :wfdb
+    end
+    error("extension '$(extension)' unknown")
+    return
+end
+
+
 
 function read_signal(header::Header, physical::Bool)
     # sigs = Vector{}
     sig_info = header_signal(header)
     fnames = filename(sig_info)
-    uniquefnames = unique(fnames)
-    @assert uniquefnames |> length == 1 #TODO: fix for multi file signals
+    uniquefname = unique(fnames)
+    #TODO: fix for multi file signals
+    @assert uniquefname |> length == 1
+    uniquefname = uniquefname[1]
+    fileextension = get_extension(uniquefname)
     format = header_signal(header)[1].format #FIXME:abstract out
-    samples = read_binary(pop!(fnames), header, DATA_DIR, header_signal(header)[1].format)
+    extension = get_extension_symbol(uniquefname)
+    if extension === :wfdb
+        samples = read_binary(pop!(fnames), header, DATA_DIR, header_signal(header)[1].format)
+    elseif extension === :matlab
+        fname = joinpath(DATA_DIR, uniquefname)
+        samples = matread(fname) |> values |> collect
+        if length(samples) > 1
+            error("more than one matrix in .mat file")
+        end
+        samples = samples[1]
+        @info "matlab shape:$(size(samples))"
+    end
     physical && dac!(samples, header)
+
+
     return reshape(samples, nsignals(header), :)
 end
 
+"""
+#8 7 6 5 4 3 2 1 |12 11 10 9 4 3 2 1|12 11 10 9 8 7 6 5 4]
+#|----SAMPLE 1--------------|--------SAMPLE 2------------|
+"""
 # function read_binary(fname::String, header::Header, basedir::String, F::Fmt)
 #     error(" not implemented for type: $(typeof(F))")
 # end
-
-"""
-function read_binary(fname::String, header::Header, basedir::String, format::Fmt{AbstractStorageFormat})
-
-# Format 16
-Each sample is represented by a 16-bit two’s complement amplitude stored least significant byte first. Any unused high-order bits are sign-extended from the most significant bit.
-
-"""
-function read_binary(fname::String, header::Header, basedir::String, format::Fmt{AbstractStorageFormat})
-    error("not implemented for $(typeof(format))")
-end
-
-function read_binary(fname::String, header::Header, basedir::String, format::Fmt{fmt16})
-    io = joinpath(basedir, fname) |> open
-    #12 bit 
-    # bit_resolution = 12
-    bytes_per_sample = 2 #16bit
-    n_signals = nsignals(header)
-    n_samples = n_signals * samples_per_signal(header)
-    n_bytes = n_samples * bytes_per_sample
-
-    data = Vector{UInt8}(undef, n_bytes)
-    read!(io, data)
-    close(io)
-
-    samples = []
-
-    # n_iter = Int64(ceil(n_samples/2))
-    for i in 1:2:n_bytes
-        sample_lower = UInt16(data[i])
-        sample_upper = UInt16(data[i+1]) << 8
-        if sample_upper & 0x0800 != 0
-            sample_lower |= 0xF000
-        end
-        push!(samples, reinterpret(Int16, sample_lower | sample_upper))
-    end
-    @assert length(samples) == n_samples
-    return samples
-end
-function read_binary(fname::String, header::Header, basedir::String, format::Fmt{fmt212})
+function read_binary(fname::String, header::Header, basedir::String, ::T) where T>:fmt212
     io = joinpath(basedir, fname) |> open
     #12 bit 
     # bit_resolution = 12

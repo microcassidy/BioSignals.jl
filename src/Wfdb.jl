@@ -1,4 +1,4 @@
 module Wfdb
-    include("header.jl")
-    include("readers.jl")
+include("header.jl")
+include("signal.jl")
 end

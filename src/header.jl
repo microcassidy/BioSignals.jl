@@ -6,7 +6,8 @@ export read_header,
     header_signal,
     nsignals,
     samples_per_signal,
-    signal_format
+    signal_format,
+    sampling_frequency
 
 const DEFAULT_FREQUENCY = 250.0f0
 using Base: initarray!
@@ -87,6 +88,7 @@ struct Header
     Header(l, v) = new(l, v)
 end
 #TODO: refactor?
+sampling_frequency(h::Header) = h.record.sampling_frequency
 header_record(h::Header) = h.record
 header_signal(h::Header) = h.signal_specs
 signal_format(s::SignalSpecLine) = s.format
@@ -116,7 +118,6 @@ function parse_record_line(record_line::String)::RecordLine
         [ \t]* (?<base_date>\d{0,2}/?\d{0,2}/?\d{0,4})
     "x
     m = match(signal_regex, record_line)
-    #@info m
     @assert !isnothing(m) "NO MATCH:$header_line"
     names = fieldnames(RecordLine)
     types = fieldtypes(RecordLine)
@@ -183,9 +184,7 @@ function parse_signal_spec_line(signal_line::String)::SignalSpecLine
         [ \t]* (?<description>[\S]?[^\t\n\r\f\v]*)
         "x
 
-    #@info "hello"
     m = match(signal_regex, signal_line)
-    #@info m
     @assert !isnothing(m) "invalid signal line:\n$signal_line"
 
     names = fieldnames(SignalSpecLine)
@@ -196,13 +195,11 @@ function parse_signal_spec_line(signal_line::String)::SignalSpecLine
     data::Dict{Symbol,Any} = Dict(name => nothing for name in names)
 
     # TODO: validation of signal lines
-    #@info "heere"
     for (symbol, T) in type_lookup
         isempty(m[symbol]) && continue
         if T === Fmt
             data[symbol] = Fmt(StorageFormat(parse(Int, m[symbol])))
         elseif T !== String
-            #@info T
             data[symbol] = parse(T, m[symbol])
         else
             data[symbol] = String(m[symbol])
@@ -235,7 +232,6 @@ function parse_signal_spec_line(signal_line::String)::SignalSpecLine
     if isnothing(data[:initial_value])
         data[:initial_value] = data[:adc_zero]
     end
-    #@info collect(values(data))
     SignalSpecLine(data[:filename],
         data[:format],
         data[:samples_per_frame],
@@ -262,7 +258,6 @@ function read_header(path)
     header = parse_record_line(popfirst!(lines))
     signal_spec_lines = Vector{SignalSpecLine}(undef, length(lines))
     for (idx, line) in enumerate(lines)
-        #@info "signal line:$line"
         signal_spec_lines[idx] = parse_signal_spec_line(line)
     end
     return Header(header, signal_spec_lines)
