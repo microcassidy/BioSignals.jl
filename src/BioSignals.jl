@@ -1,4 +1,4 @@
-module Wfdb
+module BioSignals
 include("header.jl")
 include("signal.jl")
 end

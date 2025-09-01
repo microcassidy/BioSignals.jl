@@ -1,5 +1,5 @@
-name = "Wfdb"
-uuid = "ab0b2baf-55f3-46e0-854a-b986eda60a22"
+name = "BioSignals"
+uuid = "b4c7f0a2-9ab6-42db-8e24-c5a5cb68647e"
 authors = ["Michael Cassidy"]
 version = "0.0.1"
 

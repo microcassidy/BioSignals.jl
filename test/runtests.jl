@@ -1,4 +1,4 @@
-using Wfdb
+using BioSignals
 using Test
 include("utils.jl")
 include("../src/utils.jl")
