@@ -1,3 +1,4 @@
+const DEFAULT_FREQUENCY = 250.0f0
 export read_header,
     adcgain,
     baseline,
@@ -8,9 +9,6 @@ export read_header,
     samples_per_signal,
     signal_format,
     sampling_frequency
-
-const DEFAULT_FREQUENCY = 250.0f0
-using Base: initarray!
 @enum StorageFormat begin
     _8bit_first_difference = 8
     _16bit_twos_complement = 16
@@ -24,35 +22,32 @@ using Base: initarray!
     _10bit_twos_complement_sets_of_4 = 311
 end
 abstract type AbstractStorageFormat end
-abstract type fmt8 <: AbstractStorageFormat end
-abstract type fmt16 <: AbstractStorageFormat end
-abstract type fmt24 <: AbstractStorageFormat end
-abstract type fmt32 <: AbstractStorageFormat end
-abstract type fmt61 <: AbstractStorageFormat end
-abstract type fmt80 <: AbstractStorageFormat end
-abstract type fmt160 <: AbstractStorageFormat end
-abstract type fmt212 <: AbstractStorageFormat end
-abstract type fmt310 <: AbstractStorageFormat end
-abstract type fmt311 <: AbstractStorageFormat end
+abstract type format8 <: AbstractStorageFormat end
+abstract type format16 <: AbstractStorageFormat end
+abstract type format24 <: AbstractStorageFormat end
+abstract type format32 <: AbstractStorageFormat end
+abstract type format61 <: AbstractStorageFormat end
+abstract type format80 <: AbstractStorageFormat end
+abstract type format160 <: AbstractStorageFormat end
+abstract type format212 <: AbstractStorageFormat end
+abstract type format310 <: AbstractStorageFormat end
+abstract type format311 <: AbstractStorageFormat end
+struct WfdbFormat{T<:AbstractStorageFormat} end
 
-
-struct Fmt{T<:AbstractStorageFormat} end
-
-Fmt(s::StorageFormat) = Fmt(Val{s})
-function Fmt(s::Fmt)
+WfdbFormat(s::StorageFormat) = WfdbFormat(Val{s})
+function WfdbFormat(s::WfdbFormat)
     error("constuctor not implemented for $(typeof(s))")
 end
 
-# Fmt(::Type{Val{_8bit_first_difference}}) = fmt8()
-Fmt(::Type{Val{_16bit_twos_complement}}) = Fmt{fmt16}()
-# Fmt(::Val{_24bit_twos_complement_lsb}) = fmt24()
-# Fmt
-# Fmt(::Val{_16bit_twos_complement_msb}) = fmt61()
-# Fmt(::Val{_8bit_offset_binary}) = fmt80()
-# Fmt(::Val{_16bit_offset_binary}) = Fmt{fmt212}
-Fmt(::Type{Val{_12bit_twos_complement}}) = Fmt{fmt212}()
-# Fmt(::Val{_10bit_twos_complement_sets_of_11}) = fmt310()
-# Fmt(::Val{_10bit_twos_complement_sets_of_4}) = fmt311()
+WfdbFormat(::Type{Val{_8bit_first_difference}}) = WfdbFormat{format8}()
+WfdbFormat(::Type{Val{_16bit_twos_complement}}) = WfdbFormat{format16}()
+WfdbFormat(::Type{Val{_24bit_twos_complement_lsb}}) = WfdbFormat{format24}()
+WfdbFormat(::Type{Val{_16bit_twos_complement_msb}}) = WfdbFormat{format61}()
+WfdbFormat(::Type{Val{_8bit_offset_binary}}) = WfdbFormat{format80}()
+WfdbFormat(::Type{Val{_16bit_offset_binary}}) = WfdbFormat{format160}()
+WfdbFormat(::Type{Val{_12bit_twos_complement}}) = WfdbFormat{format212}()
+WfdbFormat(::Val{_10bit_twos_complement_sets_of_11}) = WfdbFormat{format310}()
+WfdbFormat(::Val{_10bit_twos_complement_sets_of_4}) = WfdbFormat{format311}()
 
 struct RecordLine
     record_name::String
@@ -67,7 +62,7 @@ struct RecordLine
 end
 struct SignalSpecLine{T<:AbstractStorageFormat}
     filename::String
-    format::Fmt{T}
+    format::WfdbFormat{T}
     samples_per_frame::UInt32
     skew::UInt32
     byte_offset::UInt32
@@ -197,8 +192,8 @@ function parse_signal_spec_line(signal_line::String)::SignalSpecLine
     # TODO: validation of signal lines
     for (symbol, T) in type_lookup
         isempty(m[symbol]) && continue
-        if T === Fmt
-            data[symbol] = Fmt(StorageFormat(parse(Int, m[symbol])))
+        if T === WfdbFormat
+            data[symbol] = WfdbFormat(StorageFormat(parse(Int, m[symbol])))
         elseif T !== String
             data[symbol] = parse(T, m[symbol])
         else

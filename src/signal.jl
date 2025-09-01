@@ -50,10 +50,10 @@ end
 #8 7 6 5 4 3 2 1 |12 11 10 9 4 3 2 1|12 11 10 9 8 7 6 5 4]
 #|----SAMPLE 1--------------|--------SAMPLE 2------------|
 """
-# function read_binary(fname::String, header::Header, basedir::String, F::Fmt)
+# function read_binary(fname::String, header::Header, basedir::String, F::WfdbFormat)
 #     error(" not implemented for type: $(typeof(F))")
 # end
-function read_binary(fname::String, header::Header, basedir::String, ::T) where T>:fmt212
+function read_binary(fname::String, header::Header, basedir::String, ::T) where T>:format212
     io = joinpath(basedir, fname) |> open
     #12 bit 
     # bit_resolution = 12
