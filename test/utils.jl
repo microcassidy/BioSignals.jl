@@ -4,16 +4,40 @@ function headerfiles()
     readdir(DATA_DIR; join=true) |> filter(x -> isfile(x) &&
         endswith(splitdir(x)[end], ".hea"))
 end
-function read_delimited(path::String, delimiter::String, as::Type{<:Real})
-    readlines(path) .|>
-    strip .|>
-    split(delimiter) |>
-    vec -> reduce(hcat, vec) .|> #stack each vector as a column
-           x_n -> parse(as, x_n)
+function read_delimited(path::String, delimiter::String, has_header::Bool, as::Type{<:Real})
+    lines = readlines(path) .|> strip |> filter(!isempty)
+    @info repr(lines[end])
+    ncol = length(lines)
+    endi = ncol
+    starti = 1
+    firstline = first(lines)
+    firstelements = split(firstline, delimiter)
+    nrow = length(firstelements)
+    offset = 0
+    if has_header
+        starti = 2
+        offset += 1
+        labels = firstelements
+    end
+
+    output = Matrix{as}(undef, nrow, ncol - offset)
+
+    for idx in starti+offset:endi
+        l = strip(lines[idx])
+        l = split(l, delimiter)
+        try
+            output[:, idx-offset] = parse.(as, l)
+        catch e
+            @error l
+            e
+        end
+    end
+    return labels, output
 end
 function read_delimited(path::String, as::Type{<:Real})
     readlines(path) .|>
-    strip .|>
+    strip |>
+    filter(!isempty) .|>
     split |>
     vec -> reduce(hcat, vec) .|> #stack each vector as a column
            x_n -> parse(as, x_n)
