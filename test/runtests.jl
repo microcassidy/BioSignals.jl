@@ -1,5 +1,6 @@
 using BioSignals
 using Test
+using EDF
 include("utils.jl")
 include("../src/utils.jl")
 target_record(t) = joinpath(TARGET_OUTPUT, t)
@@ -52,4 +53,17 @@ end
     @info typeof(signal)
     @info "target $(size(target)) signal $(size(signal))"
     signal ≈ target
+end
+
+@testset "non-ecg" begin
+    """
+    The magic numbers replicate the command found in the python version
+    tests/test_record.py:119:68:            rdsamp -r sample-data/a103l -f 80 -s 0 1 | cut -f 2- > record-1c
+
+    probably a pointless test, more for sanity
+    """
+    target = EDF.read(joinpath(DATA_DIR, "wave_4.edf"))
+    header = read_header(joinpath(DATA_DIR, "wave_4.hea"))
+    @info dump(header)
+    signal = read_signal(header, false)
 end
