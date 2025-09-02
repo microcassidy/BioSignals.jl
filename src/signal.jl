@@ -50,43 +50,63 @@ end
 #8 7 6 5 4 3 2 1 |12 11 10 9 4 3 2 1|12 11 10 9 8 7 6 5 4]
 #|----SAMPLE 1--------------|--------SAMPLE 2------------|
 """
-# function read_binary(fname::String, header::Header, basedir::String, F::WfdbFormat)
-#     error(" not implemented for type: $(typeof(F))")
-# end
-function read_binary(fname::String, header::Header, basedir::String, ::T) where T>:format212
+function read_binary(fname::String, header::Header, basedir::String, F::WfdbFormat)
+    error(" not implemented for type: $(typeof(F))")
+end
+function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format16})
     io = joinpath(basedir, fname) |> open
     #12 bit 
     # bit_resolution = 12
     n_signals = nsignals(header)
     n_samples = n_signals * samples_per_signal(header)
+    bytes_per_sample = 2
 
-    bytes_per_sample = 3 // 2 #1.5
     n_bytes = Int64(ceil(n_samples * bytes_per_sample))
     data = Vector{UInt8}(undef, n_bytes)
     read!(io, data)
     close(io)
     #read 3 bytes at a time and convert to samples
-    samples = []
+    output = Vector{Int16}(undef, n_samples)
 
-    # n_iter = Int64(ceil(n_samples/2))
-    for i in 1:3:n_bytes
-        i + 1 > length(data) && break
-        sample_1_lower = data[i] |> UInt16
-        sample_1_upper = UInt16(data[i+1] & 0x0F) << 8
-        if sample_1_upper & 0x0800 != 0
-            sample_1_upper |= 0xF000
+    for k in 0:n_samples-1
+        sample_lower, sample_upper = UInt16.(data[2k+1:2k+2])
+        sample_upper <<= 8
+        if (sample_upper & 0x0800 != 0)
+            sample_upper |= 0xF000
         end
-        push!(samples, reinterpret(Int16, sample_1_lower | sample_1_upper))
-
-        sample_2_lower = UInt8(data[i+1] & 0xF0)
-        sample_2_upper = UInt16(data[i+2]) << 4
-        if sample_2_upper & 0x0800 != 0
-            sample_2_upper |= 0xF000
-        end
-        push!(samples, reinterpret(Int16, sample_2_lower | sample_2_upper))
+        output[k+1] = reinterpret(Int16, sample_lower | sample_upper)
     end
-    @assert length(samples) == n_samples
-    return samples
+    output
+end
+
+
+function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format212})
+    #12 bits per sample
+    io = joinpath(basedir, fname) |> open
+    n_signals = nsignals(header)
+    n_samples = n_signals * samples_per_signal(header)
+    bytes_per_sample = 3 // 2 #1.5
+    n_bytes = Int64(ceil(n_samples * bytes_per_sample))
+    data = Vector{UInt8}(undef, n_bytes)
+    read!(io, data)
+    close(io)
+    output = Vector{Float16}(undef, n_samples)
+    mask = 0x0F
+    for k in 1:n_samples
+        lower, upper = UInt16.(data[k:k+1])
+        m = k % 2
+        upper <<= 4(m + 1)
+        if k % 2 == 1
+            lower &= mask
+        else
+            upper &= ~mask
+        end
+        if upper & 0x0800 != 0
+            upper |= 0xF000
+        end
+        output[k] = reinterpret(UInt16, lower | upper)
+    end
+    output
 end
 
 function dac!(samples, h::Header)
