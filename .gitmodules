@@ -1,0 +1,3 @@
+[submodule "wfdb-spec"]
+	path = wfdb-spec
+	url = git@github.com:microcassidy/wfdb-spec.git

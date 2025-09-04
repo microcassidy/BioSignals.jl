@@ -1,14 +1,4 @@
 const DEFAULT_FREQUENCY = 250.0f0
-export read_header,
-    adcgain,
-    baseline,
-    filename,
-    header_record,
-    header_signal,
-    nsignals,
-    samples_per_signal,
-    signal_format,
-    sampling_frequency
 @enum StorageFormat begin
     _8bit_first_difference = 8
     _16bit_twos_complement = 16
@@ -32,22 +22,40 @@ abstract type format160 <: AbstractStorageFormat end
 abstract type format212 <: AbstractStorageFormat end
 abstract type format310 <: AbstractStorageFormat end
 abstract type format311 <: AbstractStorageFormat end
-struct WfdbFormat{T<:AbstractStorageFormat} end
+struct WfdbFormat{T<:AbstractStorageFormat}
+    digitalNaN::Union{Nothing,Int32}
+end
+
+# INVALID_SAMPLE_VALUE = {
+#     "80": -(2**7),
+#     "508": -(2**7),
+#     "310": -(2**9),
+#     "311": -(2**9),
+#     "212": -(2**11),
+#     "16": -(2**15),
+#     "61": -(2**15),
+#     "160": -(2**15),
+#     "516": -(2**15),
+#     "24": -(2**23),
+#     "524": -(2**23),
+#     "32": -(2**31),
+#     "8": None,
+# }
 
 WfdbFormat(s::StorageFormat) = WfdbFormat(Val{s})
 function WfdbFormat(s::WfdbFormat)
     error("constuctor not implemented for $(typeof(s))")
 end
 
-WfdbFormat(::Type{Val{_8bit_first_difference}}) = WfdbFormat{format8}()
-WfdbFormat(::Type{Val{_16bit_twos_complement}}) = WfdbFormat{format16}()
-WfdbFormat(::Type{Val{_24bit_twos_complement_lsb}}) = WfdbFormat{format24}()
-WfdbFormat(::Type{Val{_16bit_twos_complement_msb}}) = WfdbFormat{format61}()
-WfdbFormat(::Type{Val{_8bit_offset_binary}}) = WfdbFormat{format80}()
-WfdbFormat(::Type{Val{_16bit_offset_binary}}) = WfdbFormat{format160}()
-WfdbFormat(::Type{Val{_12bit_twos_complement}}) = WfdbFormat{format212}()
-WfdbFormat(::Val{_10bit_twos_complement_sets_of_11}) = WfdbFormat{format310}()
-WfdbFormat(::Val{_10bit_twos_complement_sets_of_4}) = WfdbFormat{format311}()
+WfdbFormat(::Type{Val{_8bit_first_difference}}) = WfdbFormat{format8}(nothing)
+WfdbFormat(::Type{Val{_16bit_twos_complement}}) = WfdbFormat{format16}(-2^15)
+WfdbFormat(::Type{Val{_24bit_twos_complement_lsb}}) = WfdbFormat{format24}(-2^23)
+WfdbFormat(::Type{Val{_16bit_twos_complement_msb}}) = WfdbFormat{format61}(-2^15)
+WfdbFormat(::Type{Val{_8bit_offset_binary}}) = WfdbFormat{format80}(-2^7)
+WfdbFormat(::Type{Val{_16bit_offset_binary}}) = WfdbFormat{format160}(-2^15)
+WfdbFormat(::Type{Val{_12bit_twos_complement}}) = WfdbFormat{format212}(-2^11)
+WfdbFormat(::Val{_10bit_twos_complement_sets_of_11}) = WfdbFormat{format310}(-2^9)
+WfdbFormat(::Val{_10bit_twos_complement_sets_of_4}) = WfdbFormat{format311}(-2^9)
 
 struct RecordLine
     record_name::String
@@ -63,7 +71,7 @@ end
 struct SignalSpecLine{T<:AbstractStorageFormat}
     filename::String
     format::WfdbFormat{T}
-    samples_per_frame::UInt32
+    samples_per_frame::Int32
     skew::UInt32
     byte_offset::UInt32
     adc_gain::Float32
@@ -78,17 +86,25 @@ struct SignalSpecLine{T<:AbstractStorageFormat}
 end
 
 struct Header
+    parentdir::String
     record::RecordLine
     signal_specs::Vector{SignalSpecLine}
-    Header(l, v) = new(l, v)
+    Header(p, l, v) = new(p, l, v)
 end
 #TODO: refactor?
+
+signal_description(r::SignalSpecLine) = r.description
+signal_description(v::Vector{SignalSpecLine}) = signal_description.(v)
+signal_description(h::Header) = signal_description(h.signal_specs)
+
+signal_specs(h::Header) = getfield(h, :signal_specs)
+samples_per_frame(h::Header) = samples_per_frame.(getfield(h, :signal_specs))
+# samples_per_frame(h::Vector{SignalSpecLine}) = map(x -> getfield(x, :signal_description))
+samples_per_frame(s::SignalSpecLine) = getfield(s, :samples_per_frame)
+
 sampling_frequency(h::Header) = h.record.sampling_frequency
 header_record(h::Header) = h.record
 header_signal(h::Header) = h.signal_specs
-signal_format(s::SignalSpecLine) = s.format
-signal_format(s::Vector{SignalSpecLine}) = signal_format.(s)
-signal_format(h::Header) = s |> header_signal |> signal_format
 filename(s::SignalSpecLine) = s.filename
 filename(s::Vector{SignalSpecLine}) = map(filename, s)
 samples_per_signal(h::Header) = h.record.samples_per_signal
@@ -99,6 +115,10 @@ baseline(h::Header) = h |> header_signal |> baseline
 adcgain(s::SignalSpecLine) = s.adc_gain
 adcgain(s::Vector{SignalSpecLine}) = map(adcgain, s)
 adcgain(h::Header) = h |> header_signal |> adcgain
+
+signal_format(s::SignalSpecLine) = getfield(s, :format)
+signal_format(v::Vector{SignalSpecLine}) = map(x -> getfield(x, :format), v)
+signal_format(h::Header) = header_signal(h) |> signal_format
 
 function parse_record_line(record_line::String)::RecordLine
     signal_regex = r"
@@ -205,7 +225,7 @@ function parse_signal_spec_line(signal_line::String)::SignalSpecLine
     end
 
     defaults = Dict(
-        :samples_per_frame => UInt32(1),
+        :samples_per_frame => Int32(1),
         :skew => UInt32(0),
         :byte_offset => UInt32(0),
         :adc_gain => Float32(200),
@@ -255,5 +275,6 @@ function read_header(path)
     for (idx, line) in enumerate(lines)
         signal_spec_lines[idx] = parse_signal_spec_line(line)
     end
-    return Header(header, signal_spec_lines)
+    parentdir = splitdir(path)[1]
+    return Header(parentdir, header, signal_spec_lines)
 end
