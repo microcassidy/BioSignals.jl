@@ -34,8 +34,6 @@ function read_delimited(path::String, delimiter::String, has_header::Bool, as::T
     return labels, output
 end
 function read_delimited(path::String, as::Type{<:Real})
-    #@info "running default"
-    #@info path
     readlines(path) .|>
     strip |>
     filter(!isempty) .|>
