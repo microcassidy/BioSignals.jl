@@ -12,7 +12,6 @@ function get_extension_symbol(fname)
 end
 
 function read_signal(header::Header, physical::Bool)
-    @info signal_format(header)
     # sigs = Vector{}
     sig_info = header_signal(header)
     fnames = filename(sig_info)
@@ -37,14 +36,11 @@ function read_signal(header::Header, physical::Bool)
             error("more than one matrix in .mat file")
         end
         samples = samples[1]
-        @info "matlab shape:$(size(samples))"
     end
-    @info length(samples)
     if physical
         samples = Float16.(samples)
         dac!(samples, header)
     end
-    @info length(samples)
     return reshape(samples, nsignals(header), :)
 end
 
@@ -77,7 +73,6 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
     n_bytes = Int64(ceil(n_samples * bytes_per_sample))
     data = Vector{UInt8}(undef, n_bytes)
     io = open(joinpath(basedir, fname))
-    @info typeof(io)
     cb = CircularBuffer{2,UInt16}()
     output = Vector{Int16}(undef, n_samples)
     for idx in 1:n_samples
@@ -92,7 +87,6 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
     close(io)
     # return data
     # return Matrix{Int16}(undef, nsignals, samples_per_signal(header))
-    @info size(output)
     output
 
 
@@ -101,7 +95,6 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
     io = joinpath(basedir, fname) |> open
     cb = CircularBuffer{3,UInt8}()
     n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
-    @info "samples per frame $(samples_per_frame(header))"
     # n_samples = sum(sam)
     n_bytes = Integer(n_samples * 1.5)
     output = Vector{Int16}(undef, n_samples)
