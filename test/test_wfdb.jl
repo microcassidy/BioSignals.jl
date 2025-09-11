@@ -1,60 +1,28 @@
-# @testset "test01_00s.hea" begin
-#     fname = "test01_00s.hea"
-#     path = joinpath(DATA_DIR, fname)
-#     header = read_header(path)
-#     target = read_target_record("record-1a", Int16)
-#     signal = read_signal(header, false)
-#     @test signal ≈ target
-# end
-
-function dharness(testname, filename, target_filename, _target_path, target_callback, target_callback_args, physical, tests)
-    testname =>
-        Dict(
-            :filename => filename,
-            :target_filename => target_filename,
-            :_target_path => _target_path,
-            :target_callback => target_callback,
-            :target_callback_args => target_callback_args,
-            :physical => physical,
-            :tests => tests
-        )
+@testset "header" begin
+  fname = "100.hea"
+  path = joinpath(DATA_DIR, fname)
+  header = read_header(path)
 end
-macro tset(t)
 
-    expr =
-        test_block = quote
-            @testset $(testname) begin
-                filename = d[:filename]
-                path = joinpath(DATA_DIR, filename)
-                header = read_header(path)
-                target_path = joinpath(d[:_target_path], d[:target_filename])
-                labels, target = $target_callback(d[:target_callback_args]...)
-                signal = read_signal(header, d[:physical])
-                @test signal ≈ target
-            end
-        end
+@testset "format212" begin
+  fname = "100.hea"
+  path = joinpath(DATA_DIR, fname)
+  header = read_header(path)
+  target_path = joinpath(DATA_DIR, "100.csv")
+  labels, target = read_delimited(target_path, ",", true, Float16)
+  _checksum, signal = read_signal(header, true)
+  @test checksum(header) == _checksum
+  @test signal ≈ target
 end
-tests = []
-temp = dharness("100.hea", "100.hea", "100.csv", DATA_DIR, read_delimited, [",", Float16], true, "foo")
-eval(tset(temp))
 
-# @foolish tests
-
-
-
-
-
-
-
-# @testset "100.hea" begin
-#     fname = "100.hea"
-#     path = joinpath(DATA_DIR, fname)
-#     header = read_header(path)
-#     target_path = joinpath(DATA_DIR, "100.csv")
-#     labels, target = read_delimited(target_path, ",", true, Float16)
-#     signal = read_signal(header, true)
-#     @test signal ≈ target
-# end
+@testset "format16" begin
+  fname = "test01_00s.hea"
+  path = joinpath(DATA_DIR, fname)
+  header = read_header(path)
+  @test nsignals(header) == 4
+  _checksum, signal = read_signal(header, false)
+  @test checksum(header) == _checksum
+end
 
 # @testset "matlab" begin
 #     """

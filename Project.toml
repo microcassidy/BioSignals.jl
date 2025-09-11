@@ -1,5 +1,5 @@
-name = "BioSignals"
-uuid = "b4c7f0a2-9ab6-42db-8e24-c5a5cb68647e"
+name = "WaveformDB"
+uuid = "689c0ef7-57ec-4965-8e44-b481393393ef"
 authors = ["Michael Cassidy"]
 version = "0.0.1"
 
