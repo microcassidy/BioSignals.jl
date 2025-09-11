@@ -11,7 +11,7 @@ function get_extension_symbol(fname)
   return
 end
 
-function read_signal(header::Header, physical::Bool)
+function rdsignal(header::Header,physical::Bool)
   # sigs = Vector{}
   sig_info = signalspecline(header)
   fnames = filename(header)
@@ -45,11 +45,10 @@ function read_signal(header::Header, physical::Bool)
   return _checksum, reshape(samples, nsignals(header), :)
 end
 
-"""
-#8 7 6 5 4 3 2 1 |12 11 10 9 4 3 2 1|12 11 10 9 8 7 6 5 4]
-#|----SAMPLE 1--------------|--------SAMPLE 2------------|
-"""
-# function read_binary(fname::String, header::Header, basedir::String, F::WfdbFormat)
+function rdsignal(header::Header)
+    rdsignal(header::Header,true)
+end
+
 function read_binary(fname::String, header::Header, basedir::String, F::WfdbFormat)
   error(" not implemented for type: $(typeof(F))")
 end
@@ -63,34 +62,17 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   output = Vector{Int16}(undef, n_samples)
   read!(io,output)
   return output
-
-
-  # for idx in 1:n_samples
-  #   _read!(io, cb, WfdbFormat{format16})
-  #   lower, upper = UInt16(cb[1]), UInt16(cb[2])
-  #   upper <<= 8
-  #   if upper & 0x0800 != 0
-  #       upper |= 0xF000
-  #   end
-  #   output[idx] = reinterpret(Int16, lower | upper)
-  # end
-  # close(io)
-  # return data
-  # return Matrix{Int16}(undef, nsignals, samples_per_signal(header))
-  # output
 end
+
 function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format212})
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   n_bytes = Int64(n_samples * 3//2)
   output = Vector{Int16}(undef, n_samples)
 
-  m = n_samples % 2
-
   data_buffer = zeros(UInt8,n_bytes)
   io = open(joinpath(basedir, fname))
   read!(io,data_buffer)
   data_buffer = Int16.(data_buffer)
-
 
   for idx in 1:n_samples
     m = (idx - 1) % 2
@@ -120,18 +102,17 @@ function checksum(samples,h::Header)
   expanded  = Int64.(reshape(samples, _nsignals,:))
   result = sum.(eachrow(expanded))
   return (x -> x .% 65536).(result)
-  # return mod.(_checksum, 65536)
 end
 
 
 function dac!(samples, h::Header)
   baselines = baseline(h)
   initialvalues = initial_value(h)
-  # @info dump(h)
+
   adcgains = adc_gain(h)
   _samples_per_frame = samples_per_frame(h)
   _nsignals = nsignals(h)
-  # @info "initial values $(samples[1:_nsignals])"
+
   @assert all(_samples_per_frame .== 1)
   samples_per_signal = Int64(length(samples) / _nsignals)
   linearindex = LinearIndices(reshape(samples,_nsignals,:))

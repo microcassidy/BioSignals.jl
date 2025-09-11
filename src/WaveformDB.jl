@@ -32,7 +32,7 @@ export adc_gain,
 include("header.jl")
 include("signal.jl")
 
-export read_signal, read_header
+export rdsignal, rdheader
 using MAT
 
 end

@@ -1,16 +1,16 @@
 @testset "header" begin
   fname = "100.hea"
   path = joinpath(DATA_DIR, fname)
-  header = read_header(path)
+  header = rdheader(path)
 end
 
 @testset "format212" begin
   fname = "100.hea"
   path = joinpath(DATA_DIR, fname)
-  header = read_header(path)
+  header = rdheader(path)
   target_path = joinpath(DATA_DIR, "100.csv")
   labels, target = read_delimited(target_path, ",", true, Float16)
-  _checksum, signal = read_signal(header, true)
+  _checksum, signal = rdsignal(header)
   @test all(mod.(checksum(header)- _checksum, 65536) .== 0)
   @test signal ≈ target
 end
@@ -18,9 +18,9 @@ end
 @testset "format16" begin
   fname = "test01_00s.hea"
   path = joinpath(DATA_DIR, fname)
-  header = read_header(path)
+  header = rdheader(path)
   @test nsignals(header) == 4
-  _checksum, signal = read_signal(header, false)
+  _checksum, signal = rdsignal(header)
   # @test checksum(header) == _checksum
   # @info checksum(header) - _checksum
   @test all(mod.(checksum(header)- _checksum, 65536) .== 0)
@@ -34,10 +34,10 @@ end
 #     """
 #     fname = "a103l.hea"
 #     path = joinpath(DATA_DIR, fname)
-#     header = read_header(path)
+#     header = rdheader(path)
 #     Fs = sampling_frequency(header)
 #     target = read_target_record("record-1c", Int16)
-#     signal = read_signal(header, false)
+#     signal = rdsignal(header;physical=false)
 #     signal = signal[2:end, Integer(80 * Fs)+1:end]
 #     @test signal ≈ target
 # end
@@ -58,8 +58,8 @@ end
 
 #     target_map = Dict(record.header.label => record.samples for record in file.signals)
 
-#     header = read_header(joinpath(DATA_DIR, "wave_4.hea"))
-#     signals = read_signal(header, false)
+#     header = rdheader(joinpath(DATA_DIR, "wave_4.hea"))
+#     signals = rdsignal(header;physical=false)
 #     signal_map = Dict(label => signal for (label, signal) in zip(signal_description(header), signals))
 #     signal_lengths = length.(signals) |> sort
 
