@@ -259,7 +259,7 @@ end
 
 
 
-function read_header(path,;physical=true)
+function rdheader(path)
   @assert isfile(path)
   f = open(path)
   lines = readlines(f) .|> strip |> filter(!isempty) .|> String
