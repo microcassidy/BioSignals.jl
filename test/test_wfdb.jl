@@ -12,7 +12,7 @@ end
   labels, target = read_delimited(target_path, ",", true, Float16)
   _checksum, signal = read_signal(header, true)
   @test all(mod.(checksum(header)- _checksum, 65536) .== 0)
-  # @test signal ≈ target
+  @test signal ≈ target
 end
 
 @testset "format16" begin
@@ -24,6 +24,7 @@ end
   # @test checksum(header) == _checksum
   # @info checksum(header) - _checksum
   @test all(mod.(checksum(header)- _checksum, 65536) .== 0)
+  #TODO: target signal for format 16
 end
 
 # @testset "matlab" begin
