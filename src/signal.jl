@@ -81,7 +81,7 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
 end
 function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format212})
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
-  n_bytes = Int64(n_samples * 1.5)
+  n_bytes = Int64(n_samples * 3//2)
   output = Vector{Int16}(undef, n_samples)
 
   m = n_samples % 2
@@ -89,37 +89,38 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   data_buffer = zeros(UInt8,n_bytes)
   io = open(joinpath(basedir, fname))
   read!(io,data_buffer)
-  data_buffer = UInt16.(data_buffer)
+  data_buffer = Int16.(data_buffer)
+
 
   for idx in 1:n_samples
-    f = popfirst!(data_buffer)
-    l = data_buffer[1] #need for next iteration
-    m = (idx -1) % 2
+    m = (idx - 1) % 2
+    b1 = popfirst!(data_buffer)
     if m == 0
-      l &= 0x0F
-      l <<= 8
-      if l & 0x0800 != 0
-          l |= 0xF000
-      end
+      b2 = data_buffer[1]
+      b2 &= 0x000F
+      b2 <<= 8
     else
-      f >>= 4
-      f &= 0x0F
-      f <<= 8
-      if f & 0x0800 != 0
-          f |= 0xF000
-      end
+      b2 = popfirst!(data_buffer)
+      b1 >>= 4
+      b1 &= 0x000F
+      b1 <<= 8
     end
-    output[idx] = reinterpret(Int16, l | f)
+    val = b1 + b2
+    if val > 2047
+        val -= 4096
+    end
+    output[idx] = val
   end
   return output
 end
 
 function checksum(samples,h::Header)
   _nsignals = nsignals(h)
+  _checksum = checksum(h)
   expanded  = Int64.(reshape(samples, _nsignals,:))
-  _checksum = sum.(eachrow(expanded))
-  # @info size(_checksum)
-  return (x -> x .% 65536).(_checksum)
+  result = sum.(eachrow(expanded))
+  return (x -> x .% 65536).(result)
+  # return mod.(_checksum, 65536)
 end
 
 
