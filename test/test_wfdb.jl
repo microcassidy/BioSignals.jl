@@ -1,3 +1,4 @@
+using GZip
 @testset "header" begin
   fname = "100.hea"
   path = joinpath(DATA_DIR, fname)
@@ -11,7 +12,7 @@ end
   target_path = joinpath(DATA_DIR, "100.csv")
   labels, target = read_delimited(target_path, ",", true, Float16)
   _checksum, signal = rdsignal(header)
-  @test all(mod.(checksum(header)- _checksum, 65536) .== 0)
+  @test all(mod.(checksum(header) - _checksum, 65536) .== 0)
   @test signal ≈ target
 end
 
@@ -23,8 +24,30 @@ end
   _checksum, signal = rdsignal(header)
   # @test checksum(header) == _checksum
   # @info checksum(header) - _checksum
-  @test all(mod.(checksum(header)- _checksum, 65536) .== 0)
+  @test all(mod.(checksum(header) - _checksum, 65536) .== 0)
+  @warn "not tested for target output"
+  @test 1 == 0
   #TODO: target signal for format 16
+end
+
+@testset "format24" begin
+  fname = "n8_evoked_raw_95_F1_R9.hea"
+  path = joinpath(DATA_DIR, fname)
+  header = rdheader(path)
+  _checksum, signal = rdsignal(header, false)
+  targetpath = joinpath(@__DIR__, "target-output", "record-1e.gz")
+  io = GZip.open(targetpath, "r")
+  target = readlines(io) .|> strip .|> x -> split(x, "\t")
+  target = reduce(hcat, target) .|> x -> parse(Int32, x)
+  close(io)
+
+  target[target.==-32768] .= -(2^23)
+  @test signal ≈ target
+  # target = reduce(hcat,target)
+end
+@testset "format32" begin
+  @warn "not tested"
+  @test 1 == 0
 end
 
 # @testset "matlab" begin

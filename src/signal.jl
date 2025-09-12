@@ -64,6 +64,38 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   return output
 end
 
+function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format24})::Vector{Int32}
+  nsamples = sum(samples_per_frame(header) * samples_per_signal(header))
+
+  bytespersample = 3
+  nbytes = nsamples * bytespersample
+
+  io = open(joinpath(basedir, fname))
+
+  buffer = zeros(UInt8, 4)
+  vbuffer = @view buffer[1:3]
+  output = Vector{Int32}(undef, nsamples)
+
+  for idx in eachindex(output)
+      read!(io, vbuffer)
+      o = reinterpret(Int32,buffer)[1]
+      if o & 0x800000 != 0
+        o -= 2^24
+      end
+      output[idx] = o
+  end
+
+function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format32})::Vector{Int32}
+  n_signals = nsignals(header)
+  n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
+  bytes_per_sample = 4
+  n_bytes = Int64(n_samples * bytes_per_sample)
+  io = open(joinpath(basedir, fname))
+  output = Vector{Int32}(undef, n_samples)
+  read!(io,output)
+  return output
+end
+
 function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format212})
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   n_bytes = Int64(n_samples * 3//2)
@@ -72,17 +104,17 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   data_buffer = zeros(UInt8,n_bytes)
   io = open(joinpath(basedir, fname))
   read!(io,data_buffer)
-  data_buffer = Int16.(data_buffer)
+  data_buffer = data_buffer
 
   for idx in 1:n_samples
     m = (idx - 1) % 2
-    b1 = popfirst!(data_buffer)
+    b1 = Int16(popfirst!(data_buffer))
     if m == 0
-      b2 = data_buffer[1]
+      b2 = Int16(data_buffer[1])
       b2 &= 0x000F
       b2 <<= 8
     else
-      b2 = popfirst!(data_buffer)
+      b2 = Int16(popfirst!(data_buffer))
       b1 >>= 4
       b1 &= 0x000F
       b1 <<= 8

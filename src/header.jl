@@ -56,7 +56,7 @@ struct SignalSpecLine{T<:AbstractStorageFormat}
   adc_resolution::UInt32
   adc_zero::Int32
   initial_value::Int32
-  checksum::Int16
+  checksum::Union{Nothing, Int16}
   block_size::UInt32
   description::String
 end
@@ -139,7 +139,11 @@ nsignals(h::Header) = length(h.signal_specs)
     if T === String && v isa SubString
         return String(v)
     end
-    parse(T,v)
+    I = T
+    if T isa Union
+        I = I.a === Nothing ? I.b : I.a
+    end
+    parse(I,v)
 end
 
 function parse_record_line(record_line::String)

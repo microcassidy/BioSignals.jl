@@ -1,3 +1,4 @@
 [deps]
 EDF = "ccffbfc1-f56e-50fb-a33b-53d1781b2825"
+GZip = "92fee26a-97fe-5a0c-ad85-20a5f3185b63"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
