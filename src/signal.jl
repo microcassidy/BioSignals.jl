@@ -2,13 +2,12 @@ function get_extension_symbol(fname)
   extension = get_extension(fname) |> lowercase
   if extension === nothing
     error("extension is 'nothing'")
-  elseif extension == ".mat"
-    return :matlab
-  elseif extension == ".dat"
-    return :wfdb
   end
-  error("extension '$(extension)' unknown")
-  return
+
+  if extension == ".mat"
+    return :matlab
+  end
+  return :wfdb
 end
 
 function rdsignal(header::Header,physical::Bool)
@@ -17,7 +16,7 @@ function rdsignal(header::Header,physical::Bool)
   fnames = filename(header)
   uniquefname = unique(fnames)
   #TODO: fix for multi file signals
-  @assert uniquefname |> length == 1
+  @assert length(uniquefname) == 1
   uniquefname = uniquefname[1]
   fileextension = get_extension(uniquefname)
   format = signalspecline(header)[1].format #FIXME:abstract out
