@@ -36,6 +36,7 @@ function rdsignal(header::Header,physical::Bool)
       error("more than one matrix in .mat file")
     end
     samples = samples[1]
+    @info "matlab shape: $(size(samples))"
   end
   _checksum = checksum(samples,header)
   if physical
@@ -84,6 +85,8 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
       end
       output[idx] = o
   end
+  output
+end
 
 function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format32})::Vector{Int32}
   n_signals = nsignals(header)

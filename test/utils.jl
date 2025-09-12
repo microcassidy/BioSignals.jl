@@ -34,10 +34,7 @@ function read_delimited(path::String, delimiter::String, has_header::Bool, as::T
     return labels, output
 end
 function read_delimited(path::String, as::Type{<:Real})
-    readlines(path) .|>
-    strip |>
-    filter(!isempty) .|>
-    split |>
-    vec -> reduce(hcat, vec) .|> #stack each vector as a column
-           x_n -> parse(as, x_n)
+    lines = readlines(path) .|> strip |> filter(!isempty) .|> split
+    M = foldl(hcat,lines)
+    parse.(as, M)
 end

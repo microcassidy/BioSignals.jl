@@ -26,7 +26,6 @@ end
   # @info checksum(header) - _checksum
   @test all(mod.(checksum(header) - _checksum, 65536) .== 0)
   @warn "not tested for target output"
-  @test 1 == 0
   #TODO: target signal for format 16
 end
 
@@ -47,23 +46,23 @@ end
 end
 @testset "format32" begin
   @warn "not tested"
-  @test 1 == 0
 end
 
-# @testset "matlab" begin
-#     """
-#     The magic numbers replicate the command found in the python version
-#     tests/test_record.py:119:68:            rdsamp -r sample-data/a103l -f 80 -s 0 1 | cut -f 2- > record-1c
-#     """
-#     fname = "a103l.hea"
-#     path = joinpath(DATA_DIR, fname)
-#     header = rdheader(path)
-#     Fs = sampling_frequency(header)
-#     target = read_target_record("record-1c", Int16)
-#     signal = rdsignal(header;physical=false)
-#     signal = signal[2:end, Integer(80 * Fs)+1:end]
-#     @test signal ≈ target
-# end
+@testset "matlab" begin
+    """
+    The magic numbers replicate the command found in the python version
+    tests/test_record.py:119:68:            rdsamp -r sample-data/a103l -f 80 -s 0 1 | cut -f 2- > record-1c
+    """
+    fname = "a103l.hea"
+    path = joinpath(DATA_DIR, fname)
+    header = rdheader(path)
+    Fs = sampling_frequency(header)
+    target = read_target_record("record-1c", Int16)
+    _checksum, signal = rdsignal(header,false)
+    @info "signal shape $(size(signal))"
+    signal = signal[1:2, Integer(80 * Fs)+1:end]
+    @test signal ≈ target
+end
 
 # @testset "variable segment" begin
 #     """
