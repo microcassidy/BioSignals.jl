@@ -33,7 +33,6 @@ WfdbFormat(s::StorageFormat) = WfdbFormat(Val{s})
 function WfdbFormat(s::WfdbFormat)
   error("constuctor not implemented for $(typeof(s))")
 end
-
 WfdbFormat(::Type{Val{_12bit_twos_complement}}) = WfdbFormat{format212}(-2^11)
 WfdbFormat(::Type{Val{_16bit_offset_binary}}) = WfdbFormat{format160}(-2^15)
 WfdbFormat(::Type{Val{_16bit_twos_complement_msb}}) = WfdbFormat{format61}(-2^15)
@@ -42,8 +41,8 @@ WfdbFormat(::Type{Val{_24bit_twos_complement_lsb}}) = WfdbFormat{format24}(-2^23
 WfdbFormat(::Type{Val{_32bit_twos_complement_lsb}}) = WfdbFormat{format32}(-2^31)
 WfdbFormat(::Type{Val{_8bit_first_difference}}) = WfdbFormat{format8}(nothing)
 WfdbFormat(::Type{Val{_8bit_offset_binary}}) = WfdbFormat{format80}(-2^7)
-WfdbFormat(::Val{_10bit_twos_complement_sets_of_11}) = WfdbFormat{format310}(-2^9)
-WfdbFormat(::Val{_10bit_twos_complement_sets_of_4}) = WfdbFormat{format311}(-2^9)
+WfdbFormat(::Type{Val{_10bit_twos_complement_sets_of_11}}) = WfdbFormat{format310}(-2^9)
+WfdbFormat(::Type{Val{_10bit_twos_complement_sets_of_4}}) = WfdbFormat{format311}(-2^9)
 
 WfdbFormat(s::String) = parse(Int64,s) |> StorageFormat |> WfdbFormat
 

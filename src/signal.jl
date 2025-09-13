@@ -87,6 +87,47 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   output
 end
 
+function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format310})
+  n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
+
+  N = Int64(floor(n_samples / 3))
+  m = n_samples % 3 #processing 3 samples per iteration
+
+  added_samples = 0
+  true_bytes = N * 4 + 2(m) #the real amount of bytes to store the data
+  #N.B: it is simpler to add padding and process in groups of 3
+  if m != 0
+    added_samples = Int64(3 - m)
+    N +=1
+  end
+
+  n_bytes = Int64(4*N)
+  data = zeros(UInt8, n_bytes)
+  datav = @view data[1:true_bytes] #for filling whilst leaving the zero padding
+  io = open(joinpath(basedir, fname))
+  read!(io,datav)
+
+  output = Vector{Int16}(undef, n_samples + added_samples)
+
+  @inline p0(x0,x1) = (x0 >> 1)  + (x1 & 0x7) << 7
+  @inline p1(x2,x3) = p0(x2,x3) #restatement of the first pair
+  @inline p2(x1,x3) = (x1 >> 3) & 0x1F + (((x3 >> 3) & 0x1F) << 5)
+  @inline twos_complement(p) = p > 511 ? p - 1024 : p
+
+  for idx in 1:N
+      x0,x1,x2,x3 = Int16.(data[idx*4 - 3 : idx * 4])
+      _p0 = p0(x0,x1) |> twos_complement
+      _p1 = p1(x2,x3) |> twos_complement
+      _p2 = p2(x1,x3) |> twos_complement
+      output[3*idx - 2] = _p0
+      output[3*idx - 1] = _p1
+      output[3*idx] = _p2
+  end
+  return output[1:n_samples]
+end
+
+
+
 function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format160})::Vector{Int16}
   n_signals = nsignals(header)
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
