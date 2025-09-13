@@ -2,3 +2,4 @@
 .nvim.lua
 notes.md
 .wfdb-spec
+/.DS_Store
