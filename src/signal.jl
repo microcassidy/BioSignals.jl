@@ -11,7 +11,6 @@ function get_extension_symbol(fname)
 end
 
 function rdsignal(header::Header,physical::Bool)
-  # sigs = Vector{}
   sig_info = signalspecline(header)
   fnames = filename(header)
   uniquefname = unique(fnames)
@@ -56,18 +55,15 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   m = n_samples % 3 #number of samples that dont fit into a U32
   nchunk = Int64(floor(n_samples / 3))
-  chunksizebytes = 4 #bytes
+
   bytelength_actual = chunksizebytes * nchunk + 2m
 
   if m > 0
       added_samples = 3 - m
       nchunk += 1
   end
-  #want to allocate a vecor of the right size for gliding
-  #across chunks and create a view for reading the correct number
-  #of bytes from the file
-  data = zeros(UInt8,chunksizebytes*nchunk)
-  datav = @view data[1:bytelength_actual]
+  data = zeros(UInt8,chunksizebytes*nchunk) #zero-padded
+  datav = @view data[1:bytelength_actual] #read-region
 
   io = open(joinpath(basedir, fname))
   read!(io,datav)
@@ -83,7 +79,6 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
       x >>= 10
       return x
   end
-  #each chunk will emit 3 values
   for block in eachindex(data)
       x = data[block]
       for j in 1:3
@@ -141,9 +136,9 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   io = open(joinpath(basedir, fname))
 
   buffer = zeros(UInt8, 4)
-  vbuffer = @view buffer[1:3] #create view that is used for filling 3bytes at a time
+  vbuffer = @view buffer[1:3]
   output = Vector{Int32}(undef, nsamples)
-
+  #TODO: redo this function
   for idx in eachindex(output)
       read!(io, vbuffer)
       o = reinterpret(Int32,buffer)[begin]
@@ -163,7 +158,7 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
 
   added_samples = 0
   true_bytes = N * 4 + 2(m) #the real amount of bytes to store the data
-  #N.B: it is simpler to add padding and process in groups of 3
+
   if m != 0
     added_samples = Int64(3 - m)
     N +=1
@@ -255,8 +250,6 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
 
   data_buffer = zeros(UInt8,n_bytes)
   io = open(joinpath(basedir, fname))
-  # read!(io,data_buffer)
-  # data_buffer = data_buffer
 
   N = Int64(floor(n_samples / 2))
   m = n_samples % 2
@@ -273,6 +266,7 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
       @inbounds output[ 2*idx ] = _p2
   end
   #cleanup for odd lengths
+  #TODO: probably easier to add extra samples and truncate buffer on exit
   if m == 1
     v = @view buf[1:2]
     read!(io, v)

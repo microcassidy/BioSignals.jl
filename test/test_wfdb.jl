@@ -40,13 +40,6 @@ end
   #TODO: target signal for format 16
 end
 
-# function opengzip!(output,targetpath::String)
-#   io = GZip.open(targetpath, "r")
-#   lines = readlines(io)
-#   close(io)
-#   nrow = length(split(lines[1],"\t"))
-#   ncol = length(lines)
-# end
 function opengzip!(io::IO,output::Matrix{Int32},targetpath::String,func::T where {T <: Function} )
   # values = split(read(io,String))
   idx = 1
@@ -140,7 +133,6 @@ function test_T(T::Type{U},target::Matrix{Int32}) where U <: AbstractStorageForm
       _checksum,signal = rdsignal(header,false)
       t = @view target[idx,:]
       signalv = @view signal[1, :]
-      # @assert signalv ≈ t signalv[end-4:end],t[end-4:end]
       @assert signalv ≈ t signalv[1:4],t[1:4]
       signalv ≈ t
 end
