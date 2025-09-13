@@ -104,9 +104,6 @@ struct Header
   end
 end
 
-
-
-#---HEADER ACCESS
 record_name(h::Header) = getfield(h,:record_name)
 number_of_segments(h::Header) = getfield(h,:number_of_segments)
 number_of_signals(h::Header) = getfield(h,:number_of_signals)
@@ -119,7 +116,6 @@ base_date(h::Header) = getfield(h,:base_date)
 parentdir(h::Header) = getfield(h,:parentdir)
 signalspecline(h::Header) = getfield(h,:signal_specs)
 
-#HEADER -> signal specs access
 adc_gain(h::Header) = h.signal_specs .|> adc_gain
 adc_resolution(h::Header) = h.signal_specs .|> adc_resolution
 adc_zero(h::Header) = h.signal_specs .|> adc_zero
