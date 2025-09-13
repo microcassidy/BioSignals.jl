@@ -1,0 +1,5 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+WaveformDB = "689c0ef7-57ec-4965-8e44-b481393393ef"
+[sources]
+WaveformDB = {path=".."}
