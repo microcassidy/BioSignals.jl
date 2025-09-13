@@ -3,6 +3,7 @@ using WaveformDB
 
 makedocs(
   modules=[WaveformDB],
+  format = Documenter.HTML(),
   sitename="WaveformDB.jl",
 authors = "Michael Cassidy",
 )
