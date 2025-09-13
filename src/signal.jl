@@ -87,6 +87,19 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   output
 end
 
+function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format80})::Vector{Int16}
+  n_signals = nsignals(header)
+  n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
+  bytes_per_sample = 1
+  io = open(joinpath(basedir, fname))
+  output = Vector{Int16}(undef, n_samples)
+  data = read(io,n_samples;all=false)
+  for idx in eachindex(output)
+      @inbounds output[idx] = data[idx] - Int16(128)
+  end
+  return output
+end
+
 function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format61})::Vector{Int32}
   n_signals = nsignals(header)
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
