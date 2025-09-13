@@ -1,4 +1,7 @@
+using Dates
 const DEFAULT_FREQUENCY = 250.0f0
+const TIME_FORMAT = DateFormat("HH:MM:SS")
+const DATE_FORMAT = DateFormat("DD/MM/YYYY")
 @enum StorageFormat begin
   _8bit_first_difference = 8
   _16bit_twos_complement = 16
@@ -85,8 +88,8 @@ struct Header
   counter_frequency::Float32
   base_counter_value::Float32
   samples_per_signal::Union{Nothing,UInt32}
-  base_time::Union{Nothing,String}
-  base_date::Union{Nothing,String}
+  base_time::Union{Nothing,Time}
+  base_date::Union{Nothing,Date}
   parentdir::String
   signal_specs::Vector{SignalSpecLine}
 
@@ -188,8 +191,8 @@ function parse_record_line(record_line::String)
   samples_per_signal = (isempty(m[:samples_per_signal]) || m[:samples_per_signal] == "0" ) ?
       nothing :
       _parse(typelookup[:samples_per_signal], m[:samples_per_signal])
-  base_time = isempty(m[:base_time]) ? nothing : String(m[:base_time])
-  base_date = isempty(m[:base_date]) ? nothing : String(m[:base_date])
+  base_time = isempty(m[:base_time]) ? nothing : Time(m[:base_time],TIME_FORMAT)
+  base_date = isempty(m[:base_date]) ? nothing : DATE(m[:base_date],DATE_FORMAT)
 
   NamedTuple([:record_name => record_name,
     :number_of_segments => number_of_segments,

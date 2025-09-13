@@ -4,8 +4,10 @@ authors = ["Michael Cassidy"]
 version = "0.0.1"
 
 [deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 MAT = "23992714-dd62-5051-b70f-ba57cb901cac"
 
 [compat]
+Dates = "1.11.0"
 MAT = "0.10.7"
 julia = "1.6.7"
