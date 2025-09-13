@@ -98,10 +98,24 @@ end
 
 
 
-# function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format8})::Vector{Int16}
-#   n_signals = nsignals(header)
-#   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
-# end
+function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format8})::Vector{Int16}
+  n_signals = nsignals(header)
+  n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
+  data = Vector{Int8}(undef, n_samples)
+  output = Vector{Int16}(undef, n_samples)
+  io = open(joinpath(basedir, fname))
+  read!(io,data)
+  acc = zeros(Int16,n_signals)
+  acc .= initial_value(header)
+  blocks = Int(n_samples / n_signals)
+  for j in 1:blocks
+      for i in 1:n_signals
+          acc[i] += data[i + (j-1)n_signals]
+          output[i + (j-1)n_signals] = acc[i]
+      end
+  end
+  return output
+end
 
 function read_binary(fname::String, header::Header, basedir::String, F::WfdbFormat)
   error(" not implemented for type: $(typeof(F))")
