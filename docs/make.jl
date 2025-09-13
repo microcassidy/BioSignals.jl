@@ -1,4 +1,3 @@
-push!(@__DIR__, "../src/")
 using Documenter
 using WaveformDB
 
