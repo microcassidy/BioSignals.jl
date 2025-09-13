@@ -35,7 +35,6 @@ end
   @test nsignals(header) == 4
   _checksum, signal = rdsignal(header)
   # @test checksum(header) == _checksum
-  # @info checksum(header) - _checksum
   @test all(mod.(checksum(header) - _checksum, 65536) .== 0)
   @warn "not tested for target output"
   #TODO: target signal for format 16
@@ -47,7 +46,6 @@ end
 #   close(io)
 #   nrow = length(split(lines[1],"\t"))
 #   ncol = length(lines)
-#   @info (nrow,ncol)
 # end
 function opengzip!(io::IO,output::Matrix{Int32},targetpath::String,func::T where {T <: Function} )
   # values = split(read(io,String))
@@ -71,7 +69,6 @@ function test_fmt24()
   target = Matrix{Int32}(undef,(2, 2022144))
   io = GZip.open(targetpath, "r")
 
-  @info "timing gzip open"
     opengzip!(io,target,targetpath,fixnans)
   fname = "n8_evoked_raw_95_F1_R9.hea"
   path = joinpath(DATA_DIR, fname)
@@ -98,7 +95,6 @@ end
     Fs = sampling_frequency(header)
     target = read_target_record("record-1c", Int16)
     _checksum, signal = rdsignal(header,false)
-    @info "signal shape $(size(signal))"
     signalv = @view signal[1:2, Integer(80 * Fs)+1:end]
     @test signalv ≈ target
 end
@@ -152,17 +148,23 @@ end
   mt = methods(WaveformDB.read_binary)
   targetpath = joinpath(@__DIR__, "target-output", "record-1f.gz")
   target = Matrix{Int32}(undef,(10, 499))
-  @info "opening gzip"
   io = GZip.open(targetpath, "r")
   opengzip!(io,target,targetpath,identity)
 
   #filter to the types with a formatxx subtype
   ty = [m.sig.types[end] for m in mt] |> filter(x-> x !== WaveformDB.WfdbFormat)
   ty = [t.parameters[1] for t in ty]
+  s1 = Set(Symbol(t) for t in ty)
+  s2 = Set(keys(lines_mapping))
+  yettoimplement = setdiff(s2,s1)
+  @testset "not implented" begin
+    for T in yettoimplement
+        @warn "type $(T) not implemented"
+    end
+  end
 
-  @info typeof.(ty)
+
   for T in ty
-      @info T
       @testset "$T" begin
       @test test_T(T,target)
       end

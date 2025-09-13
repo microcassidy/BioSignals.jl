@@ -49,6 +49,39 @@ function rdsignal(header::Header)
     rdsignal(header::Header,true)
 end
 
+
+
+
+function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format311})::Vector{Int16}
+  n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
+
+
+
+  @inline twos_complement(p) = p > 511 ? p - 1024 : p
+
+  function mask_shift!(x)
+      masked = reinterpret(Int16,x & 0x3FF) |> twos_complement
+      x >>= 10
+  end
+  for block in eachindex(N)
+      x = data[block]
+      for j in 1:3
+          idx= 3(block - 1) + j
+          output[idx] = mask_shift!(x)
+      end
+  end
+  collect(output[1:n_samples])
+end
+
+
+
+
+
+# function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format8})::Vector{Int16}
+#   n_signals = nsignals(header)
+#   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
+# end
+
 function read_binary(fname::String, header::Header, basedir::String, F::WfdbFormat)
   error(" not implemented for type: $(typeof(F))")
 end
