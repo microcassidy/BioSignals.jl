@@ -54,20 +54,41 @@ end
 
 function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format311})::Vector{Int16}
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
+  m = n_samples % 3 #number of samples that dont fit into a U32
+  nchunk = Int64(floor(n_samples / 3))
+  chunksizebytes = 4 #bytes
+  bytelength_actual = chunksizebytes * nchunk + 2m
 
+  if m > 0
+      added_samples = 3 - m
+      nchunk += 1
+  end
+  #want to allocate a vecor of the right size for gliding
+  #across chunks and create a view for reading the correct number
+  #of bytes from the file
+  data = zeros(UInt8,chunksizebytes*nchunk)
+  datav = @view data[1:bytelength_actual]
 
+  io = open(joinpath(basedir, fname))
+  read!(io,datav)
+
+  data = reinterpret(UInt32, data)
+  output = Vector{Int16}(undef, n_samples + added_samples)
 
   @inline twos_complement(p) = p > 511 ? p - 1024 : p
 
-  function mask_shift!(x)
-      masked = reinterpret(Int16,x & 0x3FF) |> twos_complement
+  function mask_shift!(output,idx,x)
+      val = reinterpret(Int16,UInt16(x & (0x03FF)))
+      output[idx] = twos_complement(val)
       x >>= 10
+      return x
   end
-  for block in eachindex(N)
+  #each chunk will emit 3 values
+  for block in eachindex(data)
       x = data[block]
       for j in 1:3
           idx= 3(block - 1) + j
-          output[idx] = mask_shift!(x)
+          x = mask_shift!(output,idx,x)
       end
   end
   collect(output[1:n_samples])

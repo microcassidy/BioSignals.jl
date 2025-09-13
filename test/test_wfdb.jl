@@ -140,7 +140,8 @@ function test_T(T::Type{U},target::Matrix{Int32}) where U <: AbstractStorageForm
       _checksum,signal = rdsignal(header,false)
       t = @view target[idx,:]
       signalv = @view signal[1, :]
-      @assert signalv ≈ t signalv[end-4:end],t[end-4:end]
+      # @assert signalv ≈ t signalv[end-4:end],t[end-4:end]
+      @assert signalv ≈ t signalv[1:4],t[1:4]
       signalv ≈ t
 end
 
