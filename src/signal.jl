@@ -18,7 +18,11 @@ function rdsignal(header::Header,physical::Bool)
   @assert length(uniquefname) == 1
   uniquefname = uniquefname[1]
   fileextension = get_extension(uniquefname)
-  format = signalspecline(header)[1].format #FIXME:abstract out
+  #TODO: verify whether more than 1 format can live in a single file
+
+  fmt = format(header) #FIXME:abstract out
+  @assert length(unique(fmt))  == 1 "multi format not implemented $(fmt)"
+
   extension = get_extension_symbol(uniquefname)
 
   uniquespf = samples_per_frame(header) |> unique
@@ -26,7 +30,10 @@ function rdsignal(header::Header,physical::Bool)
 
 
   if extension === :wfdb
-    samples = read_binary(pop!(fnames), header, header.parentdir, signalspecline(header)[1].format)
+# -    samples = read_binary(pop!(fnames), header, header.parentdir, signalspecline(header)[1].format)
+    open(joinpath(parentdir(header), uniquefname)) do io
+      samples = read_binary(io,header,fmt[1])
+    end
   elseif extension === :matlab
     fname = joinpath(header.parentdir, uniquefname)
     samples = matread(fname) |> values |> collect
@@ -51,7 +58,7 @@ end
 
 
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format311})::Vector{Int16}
+function read_binary(io::IO,header::Header,::WfdbFormat{format311})::Vector{Int16}
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   m = n_samples % 3 #number of samples that dont fit into a U32
   nchunk = Int64(floor(n_samples / 3))
@@ -65,7 +72,6 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   data = zeros(UInt8,chunksizebytes*nchunk) #zero-padded
   datav = @view data[1:bytelength_actual] #read-region
 
-  io = open(joinpath(basedir, fname))
   read!(io,datav)
 
   data = reinterpret(UInt32, data)
@@ -93,12 +99,11 @@ end
 
 
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format8})::Vector{Int16}
+function read_binary(io::IO,header::Header,::WfdbFormat{format8})::Vector{Int16}
   n_signals = nsignals(header)
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   data = Vector{Int8}(undef, n_samples)
   output = Vector{Int16}(undef, n_samples)
-  io = open(joinpath(basedir, fname))
   read!(io,data)
   acc = zeros(Int16,n_signals)
   acc .= initial_value(header)
@@ -112,28 +117,26 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   return output
 end
 
-function read_binary(fname::String, header::Header, basedir::String, F::WfdbFormat)
+function read_binary(io::IO,header::Header,F::WfdbFormat)
   error(" not implemented for type: $(typeof(F))")
 end
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format16})::Vector{Int16}
+function read_binary(io::IO,header::Header,::WfdbFormat{format16})::Vector{Int16}
   n_signals = nsignals(header)
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   bytes_per_sample = 2
   n_bytes = Int64(n_samples * bytes_per_sample)
-  io = open(joinpath(basedir, fname))
   output = Vector{Int16}(undef, n_samples)
   read!(io,output)
   return output
 end
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format24})::Vector{Int32}
+function read_binary(io::IO,header::Header,::WfdbFormat{format24})::Vector{Int32}
   nsamples = sum(samples_per_frame(header) * samples_per_signal(header))
 
   bytespersample = 3
   nbytes = nsamples * bytespersample
 
-  io = open(joinpath(basedir, fname))
 
   buffer = zeros(UInt8, 4)
   vbuffer = @view buffer[1:3]
@@ -150,7 +153,7 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   output
 end
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format310})
+function read_binary(io::IO,header::Header,::WfdbFormat{format310})
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
 
   N = Int64(floor(n_samples / 3))
@@ -167,7 +170,6 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   n_bytes = Int64(4*N)
   data = zeros(UInt8, n_bytes)
   datav = @view data[1:true_bytes] #for filling whilst leaving the zero padding
-  io = open(joinpath(basedir, fname))
   read!(io,datav)
 
   output = Vector{Int16}(undef, n_samples + added_samples)
@@ -195,12 +197,11 @@ end
 
 
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format160})::Vector{Int16}
+function read_binary(io::IO,header::Header,::WfdbFormat{format160})::Vector{Int16}
   n_signals = nsignals(header)
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   bytes_per_sample = 2
   nbytes = bytes_per_sample * n_samples
-  io = open(joinpath(basedir, fname))
   data = Vector{UInt16}(undef, n_samples)
   output = Vector{Int16}(undef,n_samples)
   read!(io,data)
@@ -210,11 +211,10 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   return output
 end
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format80})::Vector{Int16}
+function read_binary(io::IO,header::Header,::WfdbFormat{format80})::Vector{Int16}
   n_signals = nsignals(header)
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   bytes_per_sample = 1
-  io = open(joinpath(basedir, fname))
   output = Vector{Int16}(undef, n_samples)
   data = read(io,n_samples;all=false)
   for idx in eachindex(output)
@@ -223,31 +223,27 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   return output
 end
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format61})::Vector{Int32}
+function read_binary(io::IO,header::Header,::WfdbFormat{format61})::Vector{Int32}
   n_signals = nsignals(header)
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   bytes_per_sample = 2
   n_bytes = Int64(n_samples * bytes_per_sample)
-  io = open(joinpath(basedir, fname))
   output = Vector{Int16}(undef, n_samples)
   read!(io,output)
-  close(io)
   return bswap.(output)
 end
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format32})::Vector{Int32}
+function read_binary(io::IO,header::Header,::WfdbFormat{format32})::Vector{Int32}
   n_signals = nsignals(header)
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   bytes_per_sample = 4
   n_bytes = Int64(n_samples * bytes_per_sample)
-  io = open(joinpath(basedir, fname))
   output = Vector{Int32}(undef, n_samples)
   read!(io,output)
-  close(io)
   return output
 end
 
-function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format212})
+function read_binary(io::IO,header::Header,::WfdbFormat{format212})
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   n_bytes = Int64(ceil(n_samples * 3//2))
   true_bytes = n_bytes
@@ -261,9 +257,7 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   data_buffer = zeros(UInt8,n_bytes)
   datav = @view data_buffer[1:true_bytes]
 
-  open(joinpath(basedir, fname)) do io
-      read!(io,datav)
-  end
+  read!(io,datav)
 
   @inline p1(x0,x1) = muladd(x1 & 0x0F, 256, x0)
   @inline p2(x1,x2) = muladd(x1 & 0xF0, 16,  x2)
