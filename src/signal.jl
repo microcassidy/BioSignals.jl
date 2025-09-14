@@ -55,7 +55,7 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   m = n_samples % 3 #number of samples that dont fit into a U32
   nchunk = Int64(floor(n_samples / 3))
-
+  chunksizebytes = 4
   bytelength_actual = chunksizebytes * nchunk + 2m
 
   if m > 0
