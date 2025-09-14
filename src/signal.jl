@@ -178,7 +178,11 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   @inline twos_complement(p) = p > 511 ? p - 1024 : p
 
   for idx in 1:N
-      x0,x1,x2,x3 = Int16.(data[idx*4 - 3 : idx * 4])
+      x0 = Int16(data[idx*4 - 3])
+      x1 = Int16(data[idx*4 - 2])
+      x2 = Int16(data[idx*4 - 1])
+      x3 = Int16(data[idx*4])
+      # x0,x1,x2,x3 = Int16.(data[idx*4 - 3 : idx * 4])
       _p0 = p0(x0,x1) |> twos_complement
       _p1 = p1(x2,x3) |> twos_complement
       _p2 = p2(x1,x3) |> twos_complement
@@ -259,7 +263,9 @@ function read_binary(fname::String, header::Header, basedir::String, ::WfdbForma
   buf = Vector{UInt8}(undef,3)
   for idx in 1:N
       read!(io,buf)
-      x0,x1,x2 = Int16.(buf)
+      x0 = Int16(buf[1])
+      x1 = Int16(buf[2])
+      x2 = Int16(buf[3])
       _p1 = p1(x0,x1) |> twos_complement
       _p2 = p2(x1,x2) |> twos_complement
       @inbounds output[ 2*idx - 1 ] = _p1
