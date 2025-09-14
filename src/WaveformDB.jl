@@ -49,7 +49,6 @@ export adc_gain,
   skew,
   units,
   nsignals
-  # validatechecksum
 include("header.jl")
 include("signal.jl")
 

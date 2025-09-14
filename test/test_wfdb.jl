@@ -34,14 +34,12 @@ end
   header = rdheader(path)
   @test nsignals(header) == 4
   _checksum, signal = rdsignal(header)
-  # @test checksum(header) == _checksum
   @test all(mod.(checksum(header) - _checksum, 65536) .== 0)
   @warn "not tested for target output"
   #TODO: target signal for format 16
 end
 
 function opengzip!(io::IO,output::Matrix{Int32},targetpath::String,func::T where {T <: Function} )
-  # values = split(read(io,String))
   idx = 1
   for l in eachline(io)
       for num in split(l)
@@ -67,7 +65,6 @@ function test_fmt24()
   path = joinpath(DATA_DIR, fname)
   header = rdheader(path)
   _checksum, signal = rdsignal(header, false)
-  # fixnans!(target)
   signal ≈ target
 end
 @testset "format24" begin
