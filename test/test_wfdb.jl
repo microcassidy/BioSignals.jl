@@ -17,15 +17,17 @@ StorageFormat, AbstractStorageFormat
   header = rdheader(path)
 end
 
+using DelimitedFiles
 @testset "format212" begin
   fname = "100.hea"
   path = joinpath(DATA_DIR, fname)
   header = rdheader(path)
   target_path = joinpath(DATA_DIR, "100.csv")
-  labels, target = read_delimited(target_path, ",", true, Float16)
+  target  =readdlm(target_path, ',', Float32, '\n';skipstart=1)
+  # labels, target = read_delimited(target_path, ",", true, Float16)
   _checksum, signal = rdsignal(header)
   @test all(mod.(checksum(header) - _checksum, 65536) .== 0)
-  @test signal ≈ target
+  @test signal ≈ target'
 end
 
 @testset "format16" begin
@@ -39,16 +41,8 @@ end
   #TODO: target signal for format 16
 end
 
-function opengzip!(io::IO,output::Matrix{Int32},targetpath::String,func::T where {T <: Function} )
-  idx = 1
-  for l in eachline(io)
-      for num in split(l)
-        @inbounds output[idx] = func(parse(Int32,num))
-        idx += 1
-      end
-  end
-  close(io)
-  return
+function opengzip!(io::IO,func::T where {T <: Function} )
+  readdlm(io, '\t', Int32, '\n';use_mmap=true)' .|> func
 end
 
 function fixnans(val::T)::T where T <: Real
@@ -60,7 +54,7 @@ function test_fmt24()
   target = Matrix{Int32}(undef,(2, 2022144))
   io = GZip.open(targetpath, "r")
 
-    opengzip!(io,target,targetpath,fixnans)
+  @time target =opengzip!(io,fixnans)
   fname = "n8_evoked_raw_95_F1_R9.hea"
   path = joinpath(DATA_DIR, fname)
   header = rdheader(path)
@@ -139,7 +133,7 @@ end
   targetpath = joinpath(@__DIR__, "target-output", "record-1f.gz")
   target = Matrix{Int32}(undef,(10, 499))
   io = GZip.open(targetpath, "r")
-  opengzip!(io,target,targetpath,identity)
+  target = opengzip!(io,identity)
 
   #filter to the types with a formatxx subtype
   ty = [m.sig.types[end] for m in mt] |> filter(x-> x !== WaveformDB.WfdbFormat)

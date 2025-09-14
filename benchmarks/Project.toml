@@ -1,0 +1,5 @@
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+WaveformDB = "689c0ef7-57ec-4965-8e44-b481393393ef"
+[sources]
+WaveformDB = {path=".."}
