@@ -250,37 +250,36 @@ end
 function read_binary(fname::String, header::Header, basedir::String, ::WfdbFormat{format212})
   n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
   n_bytes = Int64(ceil(n_samples * 3//2))
-  output = Vector{Int16}(undef, n_samples)
-
-  data_buffer = zeros(UInt8,n_bytes)
-  io = open(joinpath(basedir, fname))
-
-  N = Int64(floor(n_samples / 2))
+  true_bytes = n_bytes
   m = n_samples % 2
+  N = Int64(floor(n_samples / 2))
+  if m % 2 == 1
+      n_bytes += 2
+      N += 1
+  end
+  output = Vector{Int16}(undef, n_samples + m)
+  data_buffer = zeros(UInt8,n_bytes)
+  datav = @view data_buffer[1:true_bytes]
+
+  open(joinpath(basedir, fname)) do io
+      read!(io,datav)
+  end
+
   @inline p1(x0,x1) = muladd(x1 & 0x0F, 256, x0)
   @inline p2(x1,x2) = muladd(x1 & 0xF0, 16,  x2)
   @inline twos_complement(p) = p > 2047 ? p - 4096 : p
-  buf = Vector{UInt8}(undef,3)
+
   for idx in 1:N
-      read!(io,buf)
-      x0 = Int16(buf[1])
-      x1 = Int16(buf[2])
-      x2 = Int16(buf[3])
+      # read!(io,buf)
+      @inbounds x0 = Int16(data_buffer[3(idx) - 2])
+      @inbounds x1 = Int16(data_buffer[3(idx) - 1])
+      @inbounds x2 = Int16(data_buffer[3(idx)])
       _p1 = p1(x0,x1) |> twos_complement
       _p2 = p2(x1,x2) |> twos_complement
       @inbounds output[ 2*idx - 1 ] = _p1
       @inbounds output[ 2*idx ] = _p2
   end
-  #cleanup for odd lengths
-  #TODO: probably easier to add extra samples and truncate buffer on exit
-  if m == 1
-    v = @view buf[1:2]
-    read!(io, v)
-    x0,x1 = Int16.(v)
-    _p1 = p1(x0,x1) |> twos_complement
-    @inbounds output[end] = _p1
-  end
-  return output
+  return output[1:end - m]
 end
 
 function checksum(samples,h::Header)
