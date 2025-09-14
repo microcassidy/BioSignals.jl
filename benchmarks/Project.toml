@@ -1,3 +1,7 @@
+name = "WaveformDBBench"
+authors = ["Michael Cassidy"]
+version = "0.0.1"
+uuid = "edc2a3a3-ecf5-4152-adc2-d01a8bb73d4f"
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 WaveformDB = "689c0ef7-57ec-4965-8e44-b481393393ef"

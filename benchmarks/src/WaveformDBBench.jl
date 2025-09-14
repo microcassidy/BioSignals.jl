@@ -1,8 +1,8 @@
-module Benchmarks
-const DATA_DIR = joinpath(@__DIR__, "..", "sample-data")
-using VibrationAnalysis
-
+module WaveformDBBench
 using BenchmarkTools
+const DATA_DIR = joinpath(@__DIR__, "..", "..","sample-data")
+using WaveformDB
+using WaveformDB:rdsignal
 
 BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1.0
 BenchmarkTools.DEFAULT_PARAMETERS.samples = 10000
@@ -12,16 +12,18 @@ BenchmarkTools.DEFAULT_PARAMETERS.memory_tolerance = 0.01
 const SUITE = BenchmarkGroup()
 
 
-for file in readdir(joinpath(@__DIR__,"bench"),true)
-    Core.eval(Benchmarks,:(include($file)))
+# function load!()
+for file in readdir(joinpath(@__DIR__,"bench");join = true)
+    @info "including: $file"
+    Core.eval(@__MODULE__, :(include($file)))
 end
+# end
 
 
-
-runner() = run(Benchmarks.SUITE;evals=100,seconds =5,samples =1000)
-_ = runner()
-
-function display_results()
+export runner
+runner() = run(WaveformDBBench.SUITE;evals=100,seconds =5,samples =1000)
+export displayresults
+function displayresults()
     # results = runner() 
     # display(results)
     # return
@@ -38,3 +40,10 @@ function display_results()
 end
 
 end #MODULE END
+
+using .WaveformDBBench
+using BenchmarkTools
+function (@main)(ARGS)
+    results = runner()
+    BenchmarkTools.save(ARGS[1], results)
+end
