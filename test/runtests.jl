@@ -58,6 +58,6 @@ H(sl) = WaveformDB.Header(recordline[:record_name],
 
 
 @testset "WaveformDB.jl"  begin
-    # include("test_wfdb.jl")
+    include("test_readers.jl")
     include("test_writers.jl")
 end

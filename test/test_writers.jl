@@ -22,7 +22,9 @@ function setup_writer_tests(fmts)
         seekstart(io)
         reality = read(io)
         close(io)
+
         @test expectations == reality
+
     end
     return writer_test
 end
@@ -33,7 +35,6 @@ end
     fmts = [t.parameters[1] for t in fmts]
     writertest = setup_writer_tests(fmts)
     for fmt in fmts
-        fmt ∉ Set([format8,format16,format24,format32,format61,format80,format160,format212]) && continue
         @testset "$fmt" begin
             writertest(fmt)
         end

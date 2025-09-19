@@ -25,8 +25,7 @@ end
   @test nsignals(header) == 4
   _checksum, signal = rdsignal(header)
   @test all(mod.(checksum(header) - _checksum, 65536) .== 0)
-  @warn "not tested for target output"
-  #TODO: target signal for format 16
+  @warn "only tested against checksum"
 end
 
 function opengzip!(io::IO,func::T where {T <: Function} )
@@ -52,9 +51,9 @@ end
 @testset "format24" begin
     @test test_fmt24()
 end
-@testset "format32" begin
-  @warn "not tested"
-end
+# @testset "format32" begin
+#   @warn "not tested"
+# end
 
 @testset "matlab" begin
     """
@@ -85,6 +84,7 @@ function test_T(T::Type{U},target::Matrix{Int32}) where U <: AbstractStorageForm
 end
 
 @testset "all formats" begin
+  @warn "only tested for single signal (i.e not interleaved signals) files."
   mt = methods(WaveformDB.read_binary)
   targetpath = joinpath(@__DIR__, "target-output", "record-1f.gz")
   target = Matrix{Int32}(undef,(10, 499))
