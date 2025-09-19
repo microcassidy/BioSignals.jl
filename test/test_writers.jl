@@ -33,7 +33,7 @@ end
     fmts = [t.parameters[1] for t in fmts]
     writertest = setup_writer_tests(fmts)
     for fmt in fmts
-        fmt ∉ Set([format8]) && continue
+        fmt ∉ Set([format8,format16,format24,format32,format61,format80,format160]) && continue
         @testset "$fmt" begin
             writertest(fmt)
         end

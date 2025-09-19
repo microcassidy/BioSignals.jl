@@ -26,12 +26,47 @@ function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{
     write(io,output)
 end
 
-function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format16})end
-function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format24})end
-function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format32})end
-function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format61})end
-function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format80})end
-function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format160})end
-function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format212})end
+function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format16})
+    write(io,convert(Vector{Int16},samples))
+end
+function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format24})
+    output = Vector{UInt8}(undef,length(samples) * 3)
+
+    for i in eachindex(samples)
+        v = samples[i]
+        if v < 0
+            v += 2^24
+        end
+        for j in 1:3
+            output[j + 3(i -1)] = v & 0xFF
+            v >>= 8
+        end
+    end
+    write(io, output)
+end
+function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format32})
+    write(io,samples)
+end
+function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format61})
+    write(io,bswap.(convert(Vector{Int16},samples)))
+end
+
+function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format80})
+    output = samples
+    for i in eachindex(output)
+        output[i] += Int32(128)
+    end
+    write(io,convert(Vector{UInt8},output))
+end
+
+function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format160})
+    output = Vector{UInt16}(undef, length(samples))
+
+  for idx in eachindex(samples)
+      @inbounds output[idx] = samples[idx] + 32_768
+  end
+    write(io,output)
+end
+function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format212}) end
 function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format310})end
 function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format311})end
