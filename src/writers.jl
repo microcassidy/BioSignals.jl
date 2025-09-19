@@ -67,6 +67,35 @@ function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{
   end
     write(io,output)
 end
-function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format212}) end
+function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format212})
+    n_samples = length(samples)
+    buffer_length = n_samples
+    r = n_samples % 2
+    if r == 1
+        resize!(samples,n_samples + 1)
+        samples[end] = 0
+        buffer_length += 1
+    end
+
+    n_bytes = Int64(ceil(1.5 * buffer_length))
+    n_bytes_actual = Int64(ceil(1.5 * n_samples))
+
+    output = Vector{UInt8}(undef, n_bytes)
+    @inline conv(x::Int32) = x < 0 ? x + 4096 : x
+    for i in 1:Int64(buffer_length/2)
+        v1 = samples[2i - 1] |> conv |> UInt16
+        v2 = samples[2i] |> conv |> UInt16
+        b1 = (v1 & 0x00FF)
+        b2  = ((v1 & 0x0F00) >> 8) + ((v2 & 0x0F00) >> 4)
+        b3 = (v2 & 0x00FF)
+        output[3i - 2] = b1
+        output[3i - 1] = b2
+        output[3i] = b3
+    end
+    resize!(samples,n_samples)
+    resize!(output,n_bytes_actual)
+    write(io,output)
+end
+
 function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format310})end
 function write_binary(io::IO,header::Header,samples::Vector{Int32},::WfdbFormat{format311})end
