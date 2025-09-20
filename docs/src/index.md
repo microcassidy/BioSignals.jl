@@ -1,5 +1,13 @@
-# WaveformDB.jl
+# WaveformDB.jl Documentation
 
-```@autodocs
-Modules =[WaveformDB]
-```
+## Overview
+
+
+## Examples
+
+
+## Developers
+
+
+## Cite
+
