@@ -17,6 +17,8 @@ julia> rdrecord("foo.hea")
 
 ```
 
+# Exports:
+
 """
 module WaveformDB
 export get_extension
