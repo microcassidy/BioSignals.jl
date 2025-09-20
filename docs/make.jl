@@ -4,7 +4,7 @@ using WaveformDB
 makedocs(
   modules=[WaveformDB],
   format = Documenter.HTML(),
-  sitename="WaveformDB",
+  sitename="WaveformDB.jl",
 authors = "Michael Cassidy",
 )
 

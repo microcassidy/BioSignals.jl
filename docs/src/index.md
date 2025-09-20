@@ -1,3 +1,5 @@
-# WaveformDB.jl.jl
+# WaveformDB.jl
 
-Documentation for WaveformDB.jl.jl
+```@autodocs
+Modules =[WaveformDB]
+```
