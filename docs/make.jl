@@ -1,10 +1,6 @@
 using Documenter
 using WaveformDB
 
-
-const SRC_PATH = joinpath(@__DIR__,"src")
-
-
 pages = [
     "Home" => "index.md",
     "Library" => [
@@ -27,4 +23,5 @@ makedocs(
 deploydocs(
     repo = "github.com/microcassidy/WaveformDB.jl",
     push_preview=true,
+    target="build"
 )
