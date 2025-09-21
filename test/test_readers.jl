@@ -41,7 +41,7 @@ function test_fmt24()
   target = Matrix{Int32}(undef,(2, 2022144))
   io = GZip.open(targetpath, "r")
 
-  @time target =opengzip!(io,fixnans)
+  target =opengzip!(io,fixnans)
   fname = "n8_evoked_raw_95_F1_R9.hea"
   path = joinpath(DATA_DIR, fname)
   header = rdheader(path)

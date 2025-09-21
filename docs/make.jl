@@ -1,7 +1,6 @@
 using Documenter
 using WaveformDB
 
-@info readdir()
 
 const SRC_PATH = joinpath(@__DIR__,"src")
 

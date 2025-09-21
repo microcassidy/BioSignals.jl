@@ -109,7 +109,6 @@ function write_binary(io::IO, header::Header, samples::Vector{Int32}, ::WfdbForm
     samples[nsamples+1:end] .= 0
   end
   n_bytes = Int64(buffer_length * 4 / 3)
-  @info "nbytest : $n_bytes"
   n_bytes_actual = Int64(ceil(nsamples * 4 / 3))
   output = Vector{UInt8}(undef, n_bytes)
 
@@ -149,7 +148,6 @@ function write_binary(io::IO, header::Header, samples::Vector{Int32}, ::WfdbForm
     samples[nsamples+1:end] .= 0
   end
   n_bytes = Int64(buffer_length * 4 / 3)
-  @info "nbytest : $n_bytes"
   n_bytes_actual = Int64(ceil(nsamples * 4 / 3))
   output = Vector{UInt8}(undef, n_bytes)
 

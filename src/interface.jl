@@ -41,7 +41,6 @@ function rdsignal(header::Header,physical::Bool)
       error("more than one matrix in .mat file")
     end
     samples = samples[1]
-    @info "matlab shape: $(size(samples))"
   end
   _checksum = checksum(samples,header)
   if physical
@@ -79,6 +78,3 @@ end
 function rdsignal(header::Header)
     rdsignal(header::Header,true)
 end
-
-include("readers.jl")
-include("writers.jl")

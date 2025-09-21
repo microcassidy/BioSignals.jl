@@ -51,7 +51,9 @@ export adc_gain,
   units,
   nsignals
 include("header.jl")
-include("signal.jl")
+include("interface.jl")
+include("readers.jl")
+include("writers.jl")
 
 export rdsignal, rdheader
 using MAT

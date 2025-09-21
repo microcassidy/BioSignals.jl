@@ -14,7 +14,6 @@ const SUITE = BenchmarkGroup()
 
 # function load!()
 for file in readdir(joinpath(@__DIR__,"bench");join = true)
-    @info "including: $file"
     Core.eval(@__MODULE__, :(include($file)))
 end
 # end
@@ -27,10 +26,8 @@ function displayresults()
     # results = runner() 
     # display(results)
     # return
-    # @info methods(results)
     # return
     for (subj,ks) in runner()
-        @info "foo"
         print("$subj:\n")
         for (fun_name,result) in pairs(ks) 
             print("\t$fun_name\n")
