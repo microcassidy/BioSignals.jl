@@ -1,9 +1,3 @@
-function write_binary(
-    io::IO, header::Header, samples::Vector{T}, F::WfdbFormat
-) where {T<:Integer}
-    error(" not implemented for type: $(typeof(F))")
-end
-
 function write_binary(io::IO, header::Header, samples::Vector{Int32}, ::WfdbFormat{format8})
     n_signals = nsignals(header) #do I even care about this anymore?
     n_samples = length(samples)

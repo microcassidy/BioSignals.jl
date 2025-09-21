@@ -63,21 +63,161 @@ struct SignalSpecLine{T<:AbstractStorageFormat}
     description::String
 end
 
+"""
+    filename(s::SignalSpecLine)
+a getter method for the filename field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 filename(s::SignalSpecLine) = getfield(s, :filename)
+
+"""
+    format(s::SignalSpecLine)
+a getter method for the format field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 format(s::SignalSpecLine) = getfield(s, :format)
+
+"""
+    samples_per_frame(s::SignalSpecLine)
+a getter method for the samples_per_frame field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 samples_per_frame(s::SignalSpecLine) = getfield(s, :samples_per_frame)
+
+"""
+    skew(s::SignalSpecLine)
+a getter method for the skew field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 skew(s::SignalSpecLine) = getfield(s, :skew)
+
+"""
+    byte_offset(s::SignalSpecLine)
+a getter method for the byte_offset field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 byte_offset(s::SignalSpecLine) = getfield(s, :byte_offset)
+
+"""
+    adc_gain(s::SignalSpecLine)
+a getter method for the adc_gain field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 adc_gain(s::SignalSpecLine) = getfield(s, :adc_gain)
+
+"""
+    baseline(s::SignalSpecLine)
+a getter method for the baseline field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 baseline(s::SignalSpecLine) = getfield(s, :baseline)
+
+"""
+    units(s::SignalSpecLine)
+a getter method for the units field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 units(s::SignalSpecLine) = getfield(s, :units)
+
+"""
+    adc_resolution(s::SignalSpecLine)
+a getter method for the adc_resolution field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 adc_resolution(s::SignalSpecLine) = getfield(s, :adc_resolution)
+
+"""
+    adc_zero(s::SignalSpecLine)
+a getter method for the adc_zero field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 adc_zero(s::SignalSpecLine) = getfield(s, :adc_zero)
+
+"""
+    initial_value(s::SignalSpecLine)
+a getter method for the initial_value field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 initial_value(s::SignalSpecLine) = getfield(s, :initial_value)
+
+"""
+    checksum(s::SignalSpecLine)
+a getter method for the checksum field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 checksum(s::SignalSpecLine) = getfield(s, :checksum)
+
+"""
+    block_size(s::SignalSpecLine)
+a getter method for the block_size field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 block_size(s::SignalSpecLine) = getfield(s, :block_size)
+
+"""
+    description(s::SignalSpecLine)
+a getter method for the description field in the header. can either be used on:
+- Header
+- SignalSpecLine
+- Vector{SignalSpecLine}
+"""
 description(s::SignalSpecLine) = getfield(s, :description)
 
+#TODO: document
+"""
+    struct Header
+record_name::String - A string of characters that identify the record. The record name
+number_of_segments::Union{Nothing,UInt32}
+  - If the field is present, it indicates that the record is a  multi-segment
+    record containing the specified number of segments, and that the header file
+    contains segment specification lines rather than signal specification lines.
+number_of_signals::UInt32 - the number of signals
+sampling_frequency::Float32 units samples/second/signal
+counter_frequency::Float32
+base_counter_value::Float32
+samples_per_signal::Union{Nothing,UInt32}
+base_time::Union{Nothing,Time}
+base_date::Union{Nothing,Date}
+parentdir::String
+signal_specs::Vector{SignalSpecLine}
+
+Example header (100.hea in sample-data directory of repo)
+---------START OF FILE-----------
+# unnecessary comment
+100 2 360 650000                        <---all records up to signal_specs
+100.dat 212 200 11 1024 995 -22131 0 MLII
+
+100.dat 212 200 11 1024 1011 20052 0 V5
+# 69 M 1085 1629 x1
+# Aldomet, Inderal
+---------END OF FILE-------------
+"""
 struct Header
     record_name::String
     number_of_segments::Union{Nothing,UInt32}
@@ -120,24 +260,87 @@ struct Header
     end
 end
 
+"""
+    record_name(h::Header)
+a getter method for the record_name field in the header
+"""
 record_name(h::Header) = getfield(h, :record_name)
+
+"""
+    number_of_segments(h::Header)
+a getter method for the number_of_segments field in the header
+"""
 number_of_segments(h::Header) = getfield(h, :number_of_segments)
+
+"""
+    number_of_signals(h::Header)
+a getter method for the number_of_signals field in the header
+"""
 number_of_signals(h::Header) = getfield(h, :number_of_signals)
+
+"""
+    sampling_frequency(h::Header)
+a getter method for the sampling_frequency field in the header
+"""
 sampling_frequency(h::Header) = getfield(h, :sampling_frequency)
+
+"""
+    counter_frequency(h::Header)
+a getter method for the counter_frequency field in the header
+
+"""
 counter_frequency(h::Header) = getfield(h, :counter_frequency)
+
+"""
+    base_counter_value(h::Header)
+a getter method for the base_counter_value field in the header
+"""
 base_counter_value(h::Header) = getfield(h, :base_counter_value)
+
+"""
+    samples_per_signal(h::Header)
+a getter method for the samples_per_signal field in the header
+"""
 samples_per_signal(h::Header) = getfield(h, :samples_per_signal)
+
+"""
+    base_time(h::Header)
+a getter method for the base_time field in the header
+"""
 base_time(h::Header) = getfield(h, :base_time)
+
+"""
+    base_date(h::Header)
+a getter method for the base_date field in the header
+
+"""
 base_date(h::Header) = getfield(h, :base_date)
+
+"""
+    parentdir(h::Header)
+a getter method for the parentdir field in the header
+"""
 parentdir(h::Header) = getfield(h, :parentdir)
+
+"""
+    signalspecline(h::Header)
+a getter method for the signalspecline field in the header
+"""
 signalspecline(h::Header) = getfield(h, :signal_specs)
 
 adc_gain(h::Header) = h.signal_specs .|> adc_gain
+
 adc_resolution(h::Header) = h.signal_specs .|> adc_resolution
 adc_zero(h::Header) = h.signal_specs .|> adc_zero
 baseline(h::Header) = h.signal_specs .|> baseline
 block_size(h::Header) = h.signal_specs .|> block_size
 byte_offset(h::Header) = h.signal_specs .|> byte_offset
+
+"""
+    checksum(h::Header) # retrieves the checksums from a header file
+    checksum(h::Header,signal)  # *calculates* the checksum of a decoded symbol
+"""
+function checksum end
 checksum(h::Header) = h.signal_specs .|> checksum
 description(h::Header) = h.signal_specs .|> description
 filename(h::Header) = h.signal_specs .|> filename
@@ -147,6 +350,10 @@ samples_per_frame(h::Header) = h.signal_specs .|> samples_per_frame
 skew(h::Header) = h.signal_specs .|> skew
 units(h::Header) = h.signal_specs .|> units
 
+"""
+    nsignals(h::Header)
+number of signal specs present in a header
+"""
 nsignals(h::Header) = length(h.signal_specs)
 
 @inline function _parse(T, v)

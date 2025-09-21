@@ -46,6 +46,11 @@ function rdsignal(header::Header, physical::Bool)
     return _checksum, reshape(samples, nsignals(header), :)
 end
 
+"""
+    wsignal(header::Header, signal::Vector{Int32})
+
+writes a signal file to disk. All of the information required to write the file needs to be specified by the header
+"""
 function wsignal(header::Header, signal::Vector{Int32})
     fmt = format(header) |> unique
     if length(format) > 1
@@ -72,8 +77,21 @@ function wsignal(header::Header, signal::Vector{Int32})
 end
 
 """
-    read_binary(io::IO, header::Header, F::WfdbFormat{<:AbstractStorargeFormat})
+    read_binary(io::IO, header::Header, ::WfdbFormat{<:AbstractStorargeFormat})
 
-read foo bar baz
+reads a WaveformDB sample file
+io - IOBuffer for the file ("eg 100.dat")
+header - header struct containing the information necessary to *decode* the file
+F - the format that the file is in
 """
 function read_binary end
+
+"""
+    function write_binary(io::IO, header::Header, samples::Vector{Int32}, ::WfdbFormat{<:AbstractStorageFormat})
+
+reads a WaveformDB sample file
+io - IOBuffer to write to
+header - header struct containing the information necessary to *encode* the file
+F - the WaveformDB format to encode the output as
+"""
+function write_binary end
