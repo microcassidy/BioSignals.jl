@@ -1,7 +1,3 @@
-function read_binary(io::IO, header::Header, F::WfdbFormat)
-    error(" not implemented for type: $(typeof(F))")
-end
-
 function read_binary(io::IO, header::Header, ::WfdbFormat{format311})::Vector{Int32}
     n_samples = sum(samples_per_frame(header) * samples_per_signal(header))
     m = n_samples % 3 #number of samples that dont fit into a U32
@@ -204,14 +200,6 @@ function read_binary(io::IO, header::Header, ::WfdbFormat{format212})
     end
     resize!(output, length(output) - m)
     convert(Vector{Int32}, output)
-end
-
-function checksum(samples, h::Header)
-    _nsignals = nsignals(h)
-    _checksum = checksum(h)
-    expanded = Int64.(reshape(samples, _nsignals, :))
-    result = sum.(eachrow(expanded))
-    return (x -> x .% 65536).(result)
 end
 
 function dac!(samples, h::Header)

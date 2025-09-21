@@ -1,15 +1,15 @@
-function get_extension_symbol(fname)
-    extension = get_extension(fname) |> lowercase
-    if extension === nothing
-        error("extension is 'nothing'")
-    end
+"""
+    rdsignal(h::Header,physical::Bool = true)::Tuple{Int64, Matrix{Int32}}
 
-    if extension == ".mat"
-        return :matlab
-    end
-    return :wfdb
-end
+read the samples described in the header's `signal_specs` field.
+Header - a parsed header (.hea) file
 
+physical - optional (defaults to true)
+        Specifies whether to return signals in physical units in the
+        `p_signal` field (True), or digital units in the `d_signal`
+        field (False).
+"""
+rdsignal(header::Header) = rdsignal(header::Header, true)
 function rdsignal(header::Header, physical::Bool)
     sig_info = signalspecline(header)
     fnames = filename(header)
@@ -17,17 +17,14 @@ function rdsignal(header::Header, physical::Bool)
     #TODO: fix for multi file signals
     @assert length(uniquefname) == 1
     uniquefname = uniquefname[1]
-    fileextension = get_extension(uniquefname)
     #TODO: verify whether more than 1 format can live in a single file
-
     fmt = format(header) #FIXME:abstract out
-    @assert length(unique(fmt)) == 1 "multi format not implemented $(fmt)"
-
+    length(unique(fmt)) > 1 && error("multi format not implemented $(fmt)")
     extension = get_extension_symbol(uniquefname)
 
     uniquespf = samples_per_frame(header) |> unique
     uniform = length(uniquespf) == 1 & uniquespf[1] == 1
-
+    !uniform && error("non-unity frame sizes not supported")
     if extension === :wfdb
         # -    samples = read_binary(pop!(fnames), header, header.parentdir, signalspecline(header)[1].format)
         open(joinpath(parentdir(header), uniquefname)) do io
@@ -49,7 +46,7 @@ function rdsignal(header::Header, physical::Bool)
     return _checksum, reshape(samples, nsignals(header), :)
 end
 
-function wsignal(header::Header, signal::Vector{T}) where {T<:Integer}
+function wsignal(header::Header, signal::Vector{Int32})
     fmt = format(header) |> unique
     if length(format) > 1
         error("multi format header writing is not supported")
@@ -74,6 +71,9 @@ function wsignal(header::Header, signal::Vector{T}) where {T<:Integer}
     end
 end
 
-function rdsignal(header::Header)
-    rdsignal(header::Header, true)
-end
+"""
+    read_binary(io::IO, header::Header, F::WfdbFormat{<:AbstractStorargeFormat})
+
+read foo bar baz
+"""
+function read_binary end

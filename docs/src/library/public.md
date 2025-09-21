@@ -1,4 +1,4 @@
-# Public Documentation
+# Private Documentation
 
 Documentation for `WaveformDB.jl`'s public interface.
 
@@ -9,7 +9,7 @@ See the Internals section of the manual for internal package docs covering all s
 
 ```@autodocs
 Modules = [WaveformDB]
-Public  = true
+Private  = false
 Pages   = ["WaveformDB.jl"]
 ```
 
@@ -17,36 +17,37 @@ Pages   = ["WaveformDB.jl"]
 
 ```@autodocs
 Modules = [WaveformDB]
-Public  = true
+Private  = false
 Pages = ["header.jl"]
+```
+# Interface
+
+```@autodocs
+Modules = [WaveformDB]
+Private  = false
+Pages = ["interface.jl"]
 ```
 
 ## Readers
 
 ```@autodocs
 Modules = [WaveformDB]
-Public  = true
+Private  = false
 Pages = ["readers.jl"]
 ```
 
-# Signal
+# Writers
 
 ```@autodocs
 Modules = [WaveformDB]
-Public  = true
-Pages = ["signal.jl"]
+Private  = false
+Pages = ["writers.jl"]
 ```
+
 # utils
 
 ```@autodocs
 Modules = [WaveformDB]
-Public  = true
+Private  = false
 Pages = ["utils.jl"]
-```
-# writers
-
-```@autodocs
-Modules = [WaveformDB]
-Public  = true
-Pages = ["writers.jl"]
 ```

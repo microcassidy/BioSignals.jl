@@ -1,5 +1,3 @@
-include("utils.jl")
-
 export adc_gain,
     adc_resolution,
     adc_zero,
@@ -28,7 +26,7 @@ export adc_gain,
     units,
     nsignals
 include("header.jl")
-
+include("utils.jl")
 export rdsignal, rdheader
 include("interface.jl")
 include("readers.jl")

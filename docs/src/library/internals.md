@@ -18,6 +18,14 @@ Public  = false
 Pages = ["header.jl"]
 ```
 
+# Interface
+
+```@autodocs
+Modules = [WaveformDB]
+Public  = false
+Pages = ["interface.jl"]
+```
+
 ## Readers
 
 ```@autodocs
@@ -26,21 +34,7 @@ Public  = false
 Pages = ["readers.jl"]
 ```
 
-# Signal
-
-```@autodocs
-Modules = [WaveformDB]
-Public  = false
-Pages = ["signal.jl"]
-```
-# utils
-
-```@autodocs
-Modules = [WaveformDB]
-Public  = false
-Pages = ["utils.jl"]
-```
-# writers
+# Writers
 
 ```@autodocs
 Modules = [WaveformDB]
@@ -48,3 +42,10 @@ Public  = false
 Pages = ["writers.jl"]
 ```
 
+# Utils
+
+```@autodocs
+Modules = [WaveformDB]
+Public  = false
+Pages = ["utils.jl"]
+```
