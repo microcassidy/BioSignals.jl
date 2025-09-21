@@ -28,4 +28,5 @@ makedocs(
 deploydocs(
     repo = "github.com/microcassidy/WaveformDB.jl",
     push_preview=true,
+    target="build"
 )
