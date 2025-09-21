@@ -1,14 +1,6 @@
 using Documenter
 using WaveformDB
 
-if haskey(ENV, "DOCSARGS")
-    for arg in split(ENV["DOCSARGS"])
-        (arg in ARGS) || push!(ARGS, arg)
-    end
-end
-
-
-
 pages = [
     "Home" => "index.md",
     "Library" => [
