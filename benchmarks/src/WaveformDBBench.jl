@@ -1,8 +1,8 @@
 module WaveformDBBench
 using BenchmarkTools
-const DATA_DIR = joinpath(@__DIR__, "..", "..","sample-data")
+const DATA_DIR = joinpath(@__DIR__, "..", "..", "sample-data")
 using WaveformDB
-using WaveformDB:rdsignal
+using WaveformDB: rdsignal
 
 BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1.0
 BenchmarkTools.DEFAULT_PARAMETERS.samples = 10000
@@ -11,25 +11,23 @@ BenchmarkTools.DEFAULT_PARAMETERS.memory_tolerance = 0.01
 
 const SUITE = BenchmarkGroup()
 
-
 # function load!()
-for file in readdir(joinpath(@__DIR__,"bench");join = true)
+for file in readdir(joinpath(@__DIR__, "bench"); join=true)
     Core.eval(@__MODULE__, :(include($file)))
 end
 # end
 
-
 export runner
-runner() = run(WaveformDBBench.SUITE;evals=100,seconds =5,samples =1000)
+runner() = run(WaveformDBBench.SUITE; evals=100, seconds=5, samples=1000)
 export displayresults
 function displayresults()
     # results = runner() 
     # display(results)
     # return
     # return
-    for (subj,ks) in runner()
+    for (subj, ks) in runner()
         print("$subj:\n")
-        for (fun_name,result) in pairs(ks) 
+        for (fun_name, result) in pairs(ks)
             print("\t$fun_name\n")
             display(result)
         end
@@ -37,4 +35,3 @@ function displayresults()
 end
 
 end #MODULE END
-

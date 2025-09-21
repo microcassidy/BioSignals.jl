@@ -1,8 +1,8 @@
 const DATA_DIR = joinpath(@__DIR__, "..", "sample-data")
 const TARGET_OUTPUT = joinpath(@__DIR__, "target-output")
 function headerfiles()
-    readdir(DATA_DIR; join=true) |> filter(x -> isfile(x) &&
-        endswith(splitdir(x)[end], ".hea"))
+    readdir(DATA_DIR; join=true) |>
+    filter(x -> isfile(x) && endswith(splitdir(x)[end], ".hea"))
 end
 function read_delimited(path::String, delimiter::String, has_header::Bool, as::Type{<:Real})
     lines = readlines(path) .|> strip |> filter(!isempty)
@@ -21,11 +21,11 @@ function read_delimited(path::String, delimiter::String, has_header::Bool, as::T
 
     output = Matrix{as}(undef, nrow, ncol - offset)
 
-    for idx in starti+offset:endi
+    for idx in (starti + offset):endi
         l = strip(lines[idx])
         l = split(l, delimiter)
         try
-            output[:, idx-offset] = parse.(as, l)
+            output[:, idx - offset] = parse.(as, l)
         catch e
             @error l
             e
@@ -35,6 +35,6 @@ function read_delimited(path::String, delimiter::String, has_header::Bool, as::T
 end
 function read_delimited(path::String, as::Type{<:Real})
     lines = readlines(path) .|> strip |> filter(!isempty) .|> split
-    M = foldl(hcat,lines)
+    M = foldl(hcat, lines)
     parse.(as, M)
 end
