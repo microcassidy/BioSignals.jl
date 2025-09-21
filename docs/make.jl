@@ -1,9 +1,12 @@
 using Documenter
 using WaveformDB
 
-@info readdir()
+if haskey(ENV, "DOCSARGS")
+    for arg in split(ENV["DOCSARGS"])
+        (arg in ARGS) || push!(ARGS, arg)
+    end
+end
 
-const SRC_PATH = joinpath(@__DIR__,"src")
 
 
 pages = [
